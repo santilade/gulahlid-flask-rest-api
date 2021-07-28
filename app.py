@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field
 import os
 
 # Init app
@@ -45,17 +46,28 @@ class Kid(db.Model):
 
 # -------------------------------------------------
 
-
 # Group Schema
-class GroupSchema(ma.Schema):
+class GroupSchema(SQLAlchemySchema):
     class Meta:
-        fields = ('id', 'title', 'color', 'kids')
+        model = Group
+        load_instance = True  # Optional: deserialize to model instances
+
+    id = auto_field()
+    title = auto_field()
+    color = auto_field()
+    kids = auto_field()
 
 
 # Kid Schema
-class KidSchema(ma.Schema):
+class KidSchema(SQLAlchemySchema):
     class Meta:
-        fields = ('id', 'name', 'grade', 'group_id')
+        model = Kid
+        load_instance = True
+
+    id = auto_field()
+    name = auto_field()
+    grade = auto_field()
+    group_id = auto_field()
 
 
 # Init schemas
@@ -73,13 +85,14 @@ kids_schema = KidSchema(many=True)
 def add_group():
     title = request.json['title']
     color = request.json['color']
+    kids = []
 
-    new_group = Group(title, color)
+    new_group = Group(title, color, kids)
 
     db.session.add(new_group)
     db.session.commit()
 
-    return group_schema.jsonify(new_group)
+    return group_schema.dump(new_group)
 
 
 # Get All Groups
@@ -94,7 +107,7 @@ def get_groups():
 @app.route('/group/<id>', methods=['GET'])
 def get_group(id):
     group = Group.query.get(id)
-    return group_schema.jsonify(group)
+    return group_schema.dump(group)
 
 
 # Update a Group
@@ -110,17 +123,22 @@ def update_group(id):
 
     db.session.commit()
 
-    return group_schema.jsonify(group)
+    return group_schema.dump(group)
 
 
 # Delete Group
 @app.route('/group/<id>', methods=['DELETE'])
 def delete_group(id):
     group = Group.query.get(id)
+    kids = group.kids
+
+    for kid in kids:
+        db.session.delete(kid)
+
     db.session.delete(group)
     db.session.commit()
 
-    return group_schema.jsonify(group)
+    return group_schema.dump(group)
 
 
 # -------------------------------------------------
@@ -138,7 +156,7 @@ def add_kid():
     db.session.add(new_kid)
     db.session.commit()
 
-    return group_schema.jsonify(new_kid)
+    return kid_schema.dump(new_kid)
 
 
 # Get All Kids
@@ -153,7 +171,7 @@ def get_kids():
 @app.route('/kid/<id>', methods=['GET'])
 def get_kid(id):
     kid = Kid.query.get(id)
-    return kid_schema.jsonify(kid)
+    return kid_schema.dump(kid)
 
 
 # Update a Kid
@@ -171,7 +189,7 @@ def update_kid(id):
 
     db.session.commit()
 
-    return kid_schema.jsonify(kid)
+    return kid_schema.dump(kid)
 
 
 # Delete Kid
@@ -181,7 +199,7 @@ def delete_kid(id):
     db.session.delete(kid)
     db.session.commit()
 
-    return kid_schema.jsonify(kid)
+    return kid_schema.dump(kid)
 
 
 # -------------------------------------------------
