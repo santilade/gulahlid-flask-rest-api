@@ -106,6 +106,7 @@ class AgendaSchema(SQLAlchemySchema):
     workday = auto_field()
     rotation_interval = auto_field()
     total_rotations = auto_field()
+    # shifts = auto_field()
 
 
 # Group Schema
@@ -150,8 +151,8 @@ kids_schema = KidSchema(many=True)
 def add_agenda():
     title = request.json['title']
     workday = request.json['workday']
-    rotation_interval = ['rotation_interval']
-    total_rotations = ['total_rotations']
+    rotation_interval = request.json ['rotation_interval']
+    total_rotations = request.json ['total_rotations']
 
     new_agenda = Agenda(title, workday, rotation_interval, total_rotations)
 
