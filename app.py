@@ -15,26 +15,57 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
 
+# -------------------------------------------------
+
 # Group Class/Model
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), unique=True)
     color = db.Column(db.String(200))
+    kids = db.relationship('Kid', backref='group', lazy=True)
 
-    def __init__(self, title, color):
+    def __init__(self, title, color, kids):
         self.title = title
         self.color = color
+        self.kids = kids
+
+
+# Kid Class/Model
+class Kid(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True)
+    grade = db.Column(db.Integer)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+
+    def __init__(self, name, grade, group_id):
+        self.name = name
+        self.grade = grade
+        self.group_id = group_id
+
+
+# -------------------------------------------------
 
 
 # Group Schema
 class GroupSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'title', 'color')
+        fields = ('id', 'title', 'color', 'kids')
 
 
-# Init schema
+# Kid Schema
+class KidSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'name', 'grade', 'group_id')
+
+
+# Init schemas
 group_schema = GroupSchema()
 groups_schema = GroupSchema(many=True)
+kid_schema = KidSchema()
+kids_schema = KidSchema(many=True)
+
+
+# -------------------------------------------------
 
 
 # Create a Group
@@ -90,6 +121,70 @@ def delete_group(id):
     db.session.commit()
 
     return group_schema.jsonify(group)
+
+
+# -------------------------------------------------
+
+
+# Create a Kid
+@app.route('/kid', methods=['POST'])
+def add_kid():
+    name = request.json['name']
+    grade = request.json['grade']
+    group_id = request.json['group_id']
+
+    new_kid = Kid(name, grade, group_id)
+
+    db.session.add(new_kid)
+    db.session.commit()
+
+    return group_schema.jsonify(new_kid)
+
+
+# Get All Kids
+@app.route('/kid', methods=['GET'])
+def get_kids():
+    all_kids = Kid.query.all()
+    result = kids_schema.dump(all_kids)
+    return jsonify(result)
+
+
+# Get Single Kids
+@app.route('/kid/<id>', methods=['GET'])
+def get_kid(id):
+    kid = Kid.query.get(id)
+    return kid_schema.jsonify(kid)
+
+
+# Update a Kid
+@app.route('/kid/<id>', methods=['PUT'])
+def update_kid(id):
+    kid = Kid.query.get(id)
+
+    name = request.json['name']
+    grade = request.json['grade']
+    group_id = request.json['group_id']
+
+    kid.name = name
+    kid.grade = grade
+    kid.group_id = group_id
+
+    db.session.commit()
+
+    return kid_schema.jsonify(kid)
+
+
+# Delete Kid
+@app.route('/kid/<id>', methods=['DELETE'])
+def delete_kid(id):
+    kid = Kid.query.get(id)
+    db.session.delete(kid)
+    db.session.commit()
+
+    return kid_schema.jsonify(kid)
+
+
+# -------------------------------------------------
 
 
 # Run Server
