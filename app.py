@@ -18,11 +18,28 @@ ma = Marshmallow(app)
 
 # -------------------------------------------------
 
-# Group Class/Model
+# Agenda Model
+class Agenda(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), unique=True, nullable=False)
+    workday = db.Column(db.String(100), nullable=False)  # part-time / full-time
+    rotation_interval = db.Column(db.String(100), nullable=False)  # daily rotations / weekly rotations
+    total_rotations = db.Column(db.Integer, nullable=False)
+    # shifts = db.relationship('Shift', backref='agenda', lazy=True)
+
+    def __init__(self, title, workday, rotation_interval, total_rotations):
+        self.title = title
+        self.workday = workday
+        self.rotation_interval = rotation_interval
+        self.total_rotations = total_rotations
+        # self.shifts = shifts
+
+
+# Group Model
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), unique=True)
-    color = db.Column(db.String(200))
+    title = db.Column(db.String(100), unique=True, nullable=False)
+    color = db.Column(db.String(200), nullable=False)
     kids = db.relationship('Kid', backref='group', lazy=True)
 
     def __init__(self, title, color, kids):
@@ -31,11 +48,11 @@ class Group(db.Model):
         self.kids = kids
 
 
-# Kid Class/Model
+# Kid Model
 class Kid(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True)
-    grade = db.Column(db.Integer)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    grade = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
 
     def __init__(self, name, grade, group_id):
@@ -44,13 +61,58 @@ class Kid(db.Model):
         self.group_id = group_id
 
 
+# KidInfo Model
+# class KidInfo(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
+#     important = db.Column(db.String(100))
+#     arrival_time = db.Column(db.String(100), nullable=False)
+#     departure_time = db.Column(db.String(100), nullable=False)
+#     medication_time = db.Column(db.String(100))
+#     transport = db.Column(db.String(100), nullable=False)
+#     wheelchair = db.Column(db.Boolean, nullable=False)
+#     difficulty = db.Column(db.String(100), nullable=False)
+#     staff_needed = db.Column(db.Integer, nullable=False)
+#     other_info = db.Column(db.String(1000))
+#     attendance = db.Column(db.String(100), nullable=False)
+#     agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
+#
+#     def __init__(self, kid_id, important, arrival_time, departure_time, medication_time, transport, wheelchair,
+#                  difficulty, staff_needed, other_info, attendance, agenda_id):
+#         self.kid_id = kid_id
+#         self.important = important
+#         self.arrival_time = arrival_time
+#         self.departure_time = departure_time
+#         self.medication_time = medication_time
+#         self.transport = transport
+#         self.wheelchair = wheelchair
+#         self.difficulty = difficulty
+#         self.staff_needed = staff_needed
+#         self.other_info = other_info
+#         self.attendance = attendance
+#         self.agenda_id = agenda_id
+
+
 # -------------------------------------------------
+
+# Agenda Schema
+class AgendaSchema(SQLAlchemySchema):
+    class Meta:
+        model = Agenda
+        load_instance = True
+
+    id = auto_field()
+    title = auto_field()
+    workday = auto_field()
+    rotation_interval = auto_field()
+    total_rotations = auto_field()
+
 
 # Group Schema
 class GroupSchema(SQLAlchemySchema):
     class Meta:
         model = Group
-        load_instance = True  # Optional: deserialize to model instances
+        load_instance = True
 
     id = auto_field()
     title = auto_field()
@@ -71,10 +133,82 @@ class KidSchema(SQLAlchemySchema):
 
 
 # Init schemas
+agenda_schema = AgendaSchema()
+agendas_schema = AgendaSchema(many=True)
+
 group_schema = GroupSchema()
 groups_schema = GroupSchema(many=True)
+
 kid_schema = KidSchema()
 kids_schema = KidSchema(many=True)
+
+
+# -------------------------------------------------
+
+# Create a Agenda
+@app.route('/agenda', methods=['POST'])
+def add_agenda():
+    title = request.json['title']
+    workday = request.json['workday']
+    rotation_interval = ['rotation_interval']
+    total_rotations = ['total_rotations']
+
+    new_agenda = Agenda(title, workday, rotation_interval, total_rotations)
+
+    db.session.add(new_agenda)
+    db.session.commit()
+
+    return agenda_schema.dump(new_agenda)
+
+
+# Get All Agendas
+@app.route('/agenda', methods=['GET'])
+def get_agendas():
+    all_agendas = Agenda.query.all()
+    result = agendas_schema.dump(all_agendas)
+    return jsonify(result)
+
+
+# Get Single Agendas
+@app.route('/agenda/<id>', methods=['GET'])
+def get_agenda(id):
+    agenda = Agenda.query.get(id)
+    return agenda_schema.dump(agenda)
+
+
+# Update a Agenda
+@app.route('/agenda/<id>', methods=['PUT'])
+def update_agenda(id):
+    agenda = Agenda.query.get(id)
+
+    title = request.json['title']
+    workday = request.json['workday']
+    rotation_interval = request.json['rotation_interval']
+    total_rotations = request.json['total_rotations']
+
+    agenda.title = title
+    agenda.workday = workday
+    agenda.rotation_interval = rotation_interval
+    agenda.total_rotations = total_rotations
+
+    db.session.commit()
+
+    return group_schema.dump(agenda)
+
+
+# Delete Agenda
+@app.route('/agenda/<id>', methods=['DELETE'])
+def delete_agenda(id):
+    agenda = Agenda.query.get(id)
+    # shifts = agenda.shifts
+    #
+    # for shift in shifts:
+    #     db.session.delete(shift)
+
+    db.session.delete(agenda)
+    db.session.commit()
+
+    return agenda_schema.dump(agenda)
 
 
 # -------------------------------------------------
