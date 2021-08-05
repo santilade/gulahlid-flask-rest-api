@@ -25,16 +25,17 @@ class Agenda(db.Model):
     workday = db.Column(db.String(100), nullable=False)  # part-time / full-time
     rotation_interval = db.Column(db.String(100), nullable=False)  # daily rotations / weekly rotations
     total_rotations = db.Column(db.Integer, nullable=False)
-    kid_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
+    kids_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
     employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
     # shifts = db.relationship('Shift', backref='agenda', lazy=True)
 
-    def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos):
+    def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos):
         self.title = title
         self.workday = workday
         self.rotation_interval = rotation_interval
         self.total_rotations = total_rotations
         self.kid_infos = kid_infos
+        self.employees_infos = employees_infos
         # self.shifts = shifts
 
 
@@ -55,7 +56,7 @@ class Group(db.Model):
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-    employee_infos = db.relationship('StaffInfo', backref='employee', lazy=True)
+    employee_infos = db.relationship('EmployeeInfo', backref='employee', lazy=True)
 
     def __init__(self, name, employee_infos):
         self.name = name
@@ -222,8 +223,8 @@ groups_schema = GroupSchema(many=True)
 employee_schema = EmployeeSchema()
 employees_schema = EmployeeSchema(many=True)
 
-employee_info_schema = EmployeeSchema()
-employees_infos_schema = EmployeeSchema(many=True)
+employee_info_schema = EmployeeInfoSchema()
+employees_infos_schema = EmployeeInfoSchema(many=True)
 
 kid_schema = KidSchema()
 kids_schema = KidSchema(many=True)
@@ -478,8 +479,8 @@ def update_employee_info(id):
     comments = request.json['comments']
     attendance = request.json['attendance']
 
-    employee_info.grade = comments
-    employee_info.group_id = attendance
+    employee_info.comments = comments
+    employee_info.attendance = attendance
 
     db.session.commit()
 
