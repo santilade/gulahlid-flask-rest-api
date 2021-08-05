@@ -26,6 +26,7 @@ class Agenda(db.Model):
     rotation_interval = db.Column(db.String(100), nullable=False)  # daily rotations / weekly rotations
     total_rotations = db.Column(db.Integer, nullable=False)
     kid_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
+    employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
     # shifts = db.relationship('Shift', backref='agenda', lazy=True)
 
     def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos):
@@ -48,6 +49,32 @@ class Group(db.Model):
         self.title = title
         self.color = color
         self.kids = kids
+
+
+# Employee Model
+class Employee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    employee_infos = db.relationship('StaffInfo', backref='employee', lazy=True)
+
+    def __init__(self, name, employee_infos):
+        self.name = name
+        self.employee_infos = employee_infos
+
+
+# EmployeeInfo Model
+class EmployeeInfo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    comments = db.Column(db.String(1000))
+    attendance = db.Column(db.JSON)
+    agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
+
+    def __init__(self, employee_id, comments, attendance, agenda_id):
+        self.employee_id = employee_id
+        self.comments = comments
+        self.attendance = attendance
+        self.agenda_id = agenda_id
 
 
 # Kid Model
@@ -76,13 +103,13 @@ class KidInfo(db.Model):
     transport = db.Column(db.String(100), nullable=False)
     wheelchair = db.Column(db.Boolean, nullable=False)
     difficulty = db.Column(db.String(100), nullable=False)
-    staff_needed = db.Column(db.Integer, nullable=False)
+    employees_needed = db.Column(db.Integer, nullable=False)
     other_info = db.Column(db.String(1000))
     attendance = db.Column(db.JSON)
     agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
 
     def __init__(self, kid_id, important, arrival_time, departure_time, medication_time, transport, wheelchair,
-                 difficulty, staff_needed, other_info, attendance, agenda_id):
+                 difficulty, employees_needed, other_info, attendance, agenda_id):
         self.kid_id = kid_id
         self.important = important
         self.arrival_time = arrival_time
@@ -91,7 +118,7 @@ class KidInfo(db.Model):
         self.transport = transport
         self.wheelchair = wheelchair
         self.difficulty = difficulty
-        self.staff_needed = staff_needed
+        self.employees_needed = employees_needed
         self.other_info = other_info
         self.attendance = attendance
         self.agenda_id = agenda_id
@@ -110,7 +137,8 @@ class AgendaSchema(SQLAlchemySchema):
     workday = auto_field()
     rotation_interval = auto_field()
     total_rotations = auto_field()
-    kid_infos = auto_field()
+    kids_infos = auto_field()
+    employees_infos = auto_field()
     # shifts = auto_field()
 
 
@@ -126,6 +154,30 @@ class GroupSchema(SQLAlchemySchema):
     kids = auto_field()
 
 
+# Employee Schema
+class EmployeeSchema(SQLAlchemySchema):
+    class Meta:
+        model = Employee
+        load_instance = True
+
+    id = auto_field()
+    name = auto_field()
+    employee_infos = auto_field()
+
+
+# Employee Schema
+class EmployeeInfoSchema(SQLAlchemySchema):
+    class Meta:
+        model = EmployeeInfo
+        load_instance = True
+
+    id = auto_field()
+    employee_id = auto_field()
+    comments = auto_field()
+    attendance = auto_field()
+    agenda_id = auto_field()
+
+
 # Kid Schema
 class KidSchema(SQLAlchemySchema):
     class Meta:
@@ -135,6 +187,7 @@ class KidSchema(SQLAlchemySchema):
     id = auto_field()
     name = auto_field()
     grade = auto_field()
+    group_id = auto_field()
     kid_infos = auto_field()
 
 
@@ -153,7 +206,7 @@ class KidInfoSchema(SQLAlchemySchema):
     transport = auto_field()
     wheelchair = auto_field()
     difficulty = auto_field()
-    staff_needed = auto_field()
+    employees_needed = auto_field()
     other_info = auto_field()
     attendance = auto_field()
     agenda_id = auto_field()
@@ -166,11 +219,17 @@ agendas_schema = AgendaSchema(many=True)
 group_schema = GroupSchema()
 groups_schema = GroupSchema(many=True)
 
+employee_schema = EmployeeSchema()
+employees_schema = EmployeeSchema(many=True)
+
+employee_info_schema = EmployeeSchema()
+employees_infos_schema = EmployeeSchema(many=True)
+
 kid_schema = KidSchema()
 kids_schema = KidSchema(many=True)
 
 kid_info_schema = KidInfoSchema()
-kids_info_schema = KidInfoSchema(many=True)
+kids_infos_schema = KidInfoSchema(many=True)
 
 
 # -------------------------------------------------
@@ -182,9 +241,10 @@ def add_agenda():
     workday = request.json['workday']
     rotation_interval = request.json['rotation_interval']
     total_rotations = request.json['total_rotations']
-    kid_infos = []
+    kids_infos = []
+    employees_infos = []
 
-    new_agenda = Agenda(title, workday, rotation_interval, total_rotations, kid_infos)
+    new_agenda = Agenda(title, workday, rotation_interval, total_rotations, kids_infos, employees_infos)
 
     db.session.add(new_agenda)
     db.session.commit()
@@ -231,10 +291,14 @@ def update_agenda(id):
 @app.route('/agenda/<id>', methods=['DELETE'])
 def delete_agenda(id):
     agenda = Agenda.query.get(id)
-    kid_infos = agenda.kid_infos
+    kids_infos = agenda.kids_infos
+    employees_infos = agenda.employees_infos
 
-    for kid_info in kid_infos:
+    for kid_info in kids_infos:
         db.session.delete(kid_info)
+
+    for employee_info in employees_infos:
+        db.session.delete(employee_info)
 
     # shifts = agenda.shifts
     #     #
@@ -314,7 +378,129 @@ def delete_group(id):
 # -------------------------------------------------
 
 
-# Create a Kid
+# Create a Employee
+@app.route('/employee', methods=['POST'])
+def add_employee():
+    name = request.json['name']
+    employee_infos = []
+
+    new_employee = Employee(name, employee_infos)
+
+    db.session.add(new_employee)
+    db.session.commit()
+
+    return employee_schema.dump(new_employee)
+
+
+# Get All Employees
+@app.route('/employee', methods=['GET'])
+def get_employees():
+    all_employees = Employee.query.all()
+    result = employees_schema.dump(all_employees)
+    return jsonify(result)
+
+
+# Get Single Employees
+@app.route('/employee/<id>', methods=['GET'])
+def get_employee(id):
+    employee = Employee.query.get(id)
+    return employee_schema.dump(employee)
+
+
+# Update a Employee
+@app.route('/employee/<id>', methods=['PUT'])
+def update_employee(id):
+    employee = Employee.query.get(id)
+
+    name = request.json['name']
+
+    employee.name = name
+
+    db.session.commit()
+
+    return employee_schema.dump(employee)
+
+
+# Delete Employee
+@app.route('/employee/<id>', methods=['DELETE'])
+def delete_employee(id):
+    employee = Employee.query.get(id)
+    employee_infos = employee.employee_infos
+
+    for employee_info in employee_infos:
+        db.session.delete(employee_info)
+
+    db.session.delete(employee)
+    db.session.commit()
+
+    return employee_schema.dump(employee)
+
+
+# -------------------------------------------------
+
+
+# Create Employee Info
+@app.route('/employee_info', methods=['POST'])
+def add_employee_info():
+    employee_id = request.json['employee_id']
+    comments = request.json['comments']
+    attendance = request.json['attendance']
+    agenda_id = request.json['agenda_id']
+
+    new_employee_info = EmployeeInfo(employee_id, comments, attendance, agenda_id)
+
+    db.session.add(new_employee_info)
+    db.session.commit()
+
+    return employee_info_schema.dump(new_employee_info)
+
+
+# Get All Employees Infos
+@app.route('/employee_info', methods=['GET'])
+def get_employee_infos():
+    all_employee_infos = EmployeeInfo.query.all()
+    result = employees_infos_schema.dump(all_employee_infos)
+    return jsonify(result)
+
+
+# Get Single Employee Info
+@app.route('/employee_info/<id>', methods=['GET'])
+def get_employee_info(id):
+    employee_info = EmployeeInfo.query.get(id)
+    return employee_info_schema.dump(employee_info)
+
+
+# Update Employee Info
+@app.route('/employee_info/<id>', methods=['PUT'])
+def update_employee_info(id):
+    employee_info = EmployeeInfo.query.get(id)
+
+    comments = request.json['comments']
+    attendance = request.json['attendance']
+
+    employee_info.grade = comments
+    employee_info.group_id = attendance
+
+    db.session.commit()
+
+    return employee_info_schema.dump(employee_info)
+
+
+# Delete Employee Info
+@app.route('/employee_info/<id>', methods=['DELETE'])
+def delete_employee_info(id):
+    employee_info = EmployeeInfo.query.get(id)
+
+    db.session.delete(employee_info)
+    db.session.commit()
+
+    return employee_info_schema.dump(employee_info)
+
+
+# -------------------------------------------------
+
+
+# Create Kid
 @app.route('/kid', methods=['POST'])
 def add_kid():
     name = request.json['name']
@@ -338,14 +524,14 @@ def get_kids():
     return jsonify(result)
 
 
-# Get Single Kids
+# Get Single Kid
 @app.route('/kid/<id>', methods=['GET'])
 def get_kid(id):
     kid = Kid.query.get(id)
     return kid_schema.dump(kid)
 
 
-# Update a Kid
+# Update Kid
 @app.route('/kid/<id>', methods=['PUT'])
 def update_kid(id):
     kid = Kid.query.get(id)
@@ -353,12 +539,10 @@ def update_kid(id):
     name = request.json['name']
     grade = request.json['grade']
     group_id = request.json['group_id']
-    kid_infos = request.json['kid_infos']
 
     kid.name = name
     kid.grade = grade
     kid.group_id = group_id
-    kid.kid_infos = kid_infos
 
     db.session.commit()
 
@@ -383,7 +567,7 @@ def delete_kid(id):
 # -------------------------------------------------
 
 
-# Create a KidInfo
+# Create Kid Info
 @app.route('/kid_info', methods=['POST'])
 def add_kid_info():
     kid_id = request.json['kid_id']
@@ -394,13 +578,13 @@ def add_kid_info():
     transport = request.json['transport']
     wheelchair = request.json['wheelchair']
     difficulty = request.json['difficulty']
-    staff_needed = request.json['staff_needed']
+    employees_needed = request.json['employees_needed']
     other_info = request.json['other_info']
     attendance = request.json['attendance']
     agenda_id = request.json['agenda_id']
 
     new_kid_info = KidInfo(kid_id, important, arrival_time, departure_time, medication_time, transport, wheelchair,
-                           difficulty, staff_needed, other_info, attendance, agenda_id)
+                           difficulty, employees_needed, other_info, attendance, agenda_id)
 
     db.session.add(new_kid_info)
     db.session.commit()
@@ -408,27 +592,26 @@ def add_kid_info():
     return kid_info_schema.dump(new_kid_info)
 
 
-# Get All KidsInfo
+# Get All Kids Infos
 @app.route('/kid_info', methods=['GET'])
 def get_kids_info():
     all_kids_info = KidInfo.query.all()
-    result = kids_info_schema.dump(all_kids_info)
+    result = kids_infos_schema.dump(all_kids_info)
     return jsonify(result)
 
 
-# Get Single KidInfo
+# Get Single Kid Info
 @app.route('/kid_info/<id>', methods=['GET'])
 def get_kid_info(id):
     kid_info = KidInfo.query.get(id)
     return kid_info_schema.dump(kid_info)
 
 
-# Update a KidInfo
+# Update Kid Info
 @app.route('/kid_info/<id>', methods=['PUT'])
 def update_kid_info(id):
     kid_info = KidInfo.query.get(id)
 
-    kid_id = request.json['kid_id']
     important = request.json['important']
     arrival_time = request.json['arrival_time']
     departure_time = request.json['departure_time']
@@ -436,12 +619,10 @@ def update_kid_info(id):
     transport = request.json['transport']
     wheelchair = request.json['wheelchair']
     difficulty = request.json['difficulty']
-    staff_needed = request.json['staff_needed']
+    employees_needed = request.json['employees_needed']
     other_info = request.json['other_info']
     attendance = request.json['attendance']
-    agenda_id = request.json['agenda_id']
 
-    kid_info.kid_id = kid_id
     kid_info.important = important
     kid_info.arrival_time = arrival_time
     kid_info.departure_time = departure_time
@@ -449,20 +630,20 @@ def update_kid_info(id):
     kid_info.transport = transport
     kid_info.wheelchair = wheelchair
     kid_info.difficulty = difficulty
-    kid_info.staff_needed = staff_needed
+    kid_info.employees_needed = employees_needed
     kid_info.other_info = other_info
     kid_info.attendance = attendance
-    kid_info.agenda_id = agenda_id
 
     db.session.commit()
 
     return kid_info_schema.dump(kid_info)
 
 
-# Delete KidInfo
+# Delete Kid Info
 @app.route('/kid_info/<id>', methods=['DELETE'])
 def delete_kid_info(id):
     kid_info = KidInfo.query.get(id)
+
     db.session.delete(kid_info)
     db.session.commit()
 
