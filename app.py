@@ -18,6 +18,18 @@ ma = Marshmallow(app)
 
 # -------------------------------------------------
 
+
+compatible = db.Table('compatible',
+                      db.Column('kid_id', db.Integer, db.ForeignKey('kid.id'), primary_key=True),
+                      db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'), primary_key=True)
+                      )
+
+incompatible = db.Table('incompatible',
+                        db.Column('kid_id', db.Integer, db.ForeignKey('kid.id'), primary_key=True),
+                        db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'), primary_key=True)
+                        )
+
+
 # Agenda Model
 class Agenda(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,6 +39,7 @@ class Agenda(db.Model):
     total_rotations = db.Column(db.Integer, nullable=False)
     kids_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
     employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
+
     # shifts = db.relationship('Shift', backref='agenda', lazy=True)
 
     def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos):
@@ -56,10 +69,14 @@ class Group(db.Model):
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
+    compatible_kids = db.relationship("Kid", secondary=compatible, back_populates="compatible_employees")
+    incompatible_kids = db.relationship("Kid", secondary=incompatible, back_populates="incompatible_employees")
     employee_infos = db.relationship('EmployeeInfo', backref='employee', lazy=True)
 
-    def __init__(self, name, employee_infos):
+    def __init__(self, name, compatible_kids, incompatible_kids, employee_infos):
         self.name = name
+        self.compatible_kids = compatible_kids
+        self.incompatible_kids = incompatible_kids
         self.employee_infos = employee_infos
 
 
@@ -84,12 +101,16 @@ class Kid(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     grade = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    compatible_employees = db.relationship("Employee", secondary=compatible, back_populates="compatible_kids")
+    incompatible_employees = db.relationship("Employee", secondary=incompatible, back_populates="incompatible_kids")
     kid_infos = db.relationship('KidInfo', backref='kid', lazy=True)
 
-    def __init__(self, name, grade, group_id, kid_infos):
+    def __init__(self, name, grade, group_id, compatible_employees, incompatible_employees, kid_infos):
         self.name = name
         self.grade = grade
         self.group_id = group_id
+        self.compatible_employees = compatible_employees
+        self.incompatible_employees = incompatible_employees
         self.kid_infos = kid_infos
 
 
@@ -163,6 +184,8 @@ class EmployeeSchema(SQLAlchemySchema):
 
     id = auto_field()
     name = auto_field()
+    compatible_kids = auto_field()
+    incompatible_kids = auto_field()
     employee_infos = auto_field()
 
 
@@ -189,6 +212,8 @@ class KidSchema(SQLAlchemySchema):
     name = auto_field()
     grade = auto_field()
     group_id = auto_field()
+    compatible_employees = auto_field()
+    incompatible_employees = auto_field()
     kid_infos = auto_field()
 
 
@@ -385,9 +410,23 @@ def add_employee():
     name = request.json['name']
     employee_infos = []
 
-    new_employee = Employee(name, employee_infos)
+    new_employee = Employee(name, [], [], employee_infos)
 
     db.session.add(new_employee)
+    db.session.flush()
+
+    compatible_kids = request.json['compatible_kids']
+    for compatible_kid in compatible_kids:
+        kid = Kid.query.get(compatible_kid)
+        kid.compatible_employees.append(new_employee)
+        db.session.flush()
+
+    incompatible_kids = request.json['incompatible_kids']
+    for incompatible_kid in incompatible_kids:
+        kid = Kid.query.get(incompatible_kid)
+        kid.incompatible_employees.append(new_employee)
+        db.session.flush()
+
     db.session.commit()
 
     return employee_schema.dump(new_employee)
@@ -416,6 +455,21 @@ def update_employee(id):
     name = request.json['name']
 
     employee.name = name
+    employee.compatible_kids = []
+    employee.incompatible_kids = []
+    db.session.flush()
+
+    compatible_kids = request.json['compatible_kids']
+    for kid_id in compatible_kids:
+        kid = Kid.query.get(kid_id)
+        kid.compatible_employees.append(employee)
+        db.session.flush()
+
+    incompatible_kids = request.json['incompatible_kids']
+    for kid_id in incompatible_kids:
+        kid = Kid.query.get(kid_id)
+        kid.incompatible_employees.append(employee)
+        db.session.flush()
 
     db.session.commit()
 
@@ -426,7 +480,19 @@ def update_employee(id):
 @app.route('/employee/<id>', methods=['DELETE'])
 def delete_employee(id):
     employee = Employee.query.get(id)
+    compatible_kids = employee.compatible_kids
+    incompatible_kids = employee.incompatible_kids
     employee_infos = employee.employee_infos
+
+    for compatible_kid in compatible_kids:
+        kid = Kid.query.get(compatible_kid)
+        kid.compatible_employees.remove(employee)
+        db.session.flush()
+
+    for incompatible_kid in incompatible_kids:
+        kid = Kid.query.get(incompatible_kid)
+        kid.incompatible_employees.remove(employee)
+        db.session.flush()
 
     for employee_info in employee_infos:
         db.session.delete(employee_info)
@@ -509,9 +575,23 @@ def add_kid():
     group_id = request.json['group_id']
     kid_infos = []
 
-    new_kid = Kid(name, grade, group_id, kid_infos)
+    new_kid = Kid(name, grade, group_id, [], [], kid_infos)
 
     db.session.add(new_kid)
+    db.session.flush()
+
+    compatible_employees = request.json['compatible_employees']
+    for compatible_employee in compatible_employees:
+        kid = Kid.query.get(compatible_employee)
+        kid.compatible_employees.append(new_kid)
+        db.session.flush()
+
+    incompatible_employees = request.json['incompatible_employees']
+    for incompatible_employee in incompatible_employees:
+        kid = Kid.query.get(incompatible_employee)
+        kid.incompatible_employees.append(new_kid)
+        db.session.flush()
+
     db.session.commit()
 
     return kid_schema.dump(new_kid)
@@ -544,6 +624,21 @@ def update_kid(id):
     kid.name = name
     kid.grade = grade
     kid.group_id = group_id
+    kid.compatible_employees = []
+    kid.incompatible_employees = []
+    db.session.flush()
+
+    compatible_employees = request.json['compatible_employees']
+    for compatible_employee in compatible_employees:
+        employee = Employee.query.get(compatible_employee)
+        employee.compatible_kids.append(kid)
+        db.session.flush()
+
+    incompatible_employees = request.json['incompatible_employees']
+    for incompatible_employee in incompatible_employees:
+        employee = Employee.query.get(incompatible_employee)
+        employee.incompatible_kids.append(kid)
+        db.session.flush()
 
     db.session.commit()
 
@@ -554,7 +649,19 @@ def update_kid(id):
 @app.route('/kid/<id>', methods=['DELETE'])
 def delete_kid(id):
     kid = Kid.query.get(id)
+    compatible_employees = kid.compatible_kids
+    incompatible_employees = kid.incompatible_kids
     kid_infos = kid.kid_infos
+
+    for compatible_employee in compatible_employees:
+        employee = Employee.query.get(compatible_employee)
+        employee.compatible_kids.remove(kid)
+        db.session.flush()
+
+    for incompatible_employee in incompatible_employees:
+        employee = Employee.query.get(incompatible_employee)
+        employee.incompatible_kids.remove(kid)
+        db.session.flush()
 
     for kid_info in kid_infos:
         db.session.delete(kid_info)
