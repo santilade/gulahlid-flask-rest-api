@@ -78,7 +78,7 @@ class KidInfo(db.Model):
     difficulty = db.Column(db.String(100), nullable=False)
     staff_needed = db.Column(db.Integer, nullable=False)
     other_info = db.Column(db.String(1000))
-    attendance = db.Column(db.String(100), nullable=False)
+    attendance = db.Column(db.JSON)
     agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
 
     def __init__(self, kid_id, important, arrival_time, departure_time, medication_time, transport, wheelchair,
