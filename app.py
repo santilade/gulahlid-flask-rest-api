@@ -39,17 +39,35 @@ class Agenda(db.Model):
     total_rotations = db.Column(db.Integer, nullable=False)
     kids_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
     employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
+    shifts = db.relationship('Shift', backref='agenda', lazy=True)
 
-    # shifts = db.relationship('Shift', backref='agenda', lazy=True)
-
-    def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos):
+    def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos, shifts):
         self.title = title
         self.workday = workday
         self.rotation_interval = rotation_interval
         self.total_rotations = total_rotations
         self.kid_infos = kid_infos
         self.employees_infos = employees_infos
-        # self.shifts = shifts
+        self.shifts = shifts
+
+
+# Shift Model
+class Shift(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
+    rotation = db.Column(db.Integer, nullable=False)
+    shift = db.Column(db.String(100), nullable=False)  # morning / afternoon
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
+    # role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+
+    def __init__(self, agenda_id, rotation, shift, employee_id, kid_id):
+        self.agenda_id = agenda_id
+        self.rotation = rotation
+        self.shift = shift
+        self.employee_id = employee_id
+        self.kid_id = kid_id
+        # self.role_id = role_id
 
 
 # Group Model
@@ -72,12 +90,14 @@ class Employee(db.Model):
     compatible_kids = db.relationship("Kid", secondary=compatible, back_populates="compatible_employees")
     incompatible_kids = db.relationship("Kid", secondary=incompatible, back_populates="incompatible_employees")
     employee_infos = db.relationship('EmployeeInfo', backref='employee', lazy=True)
+    shifts = db.relationship('Shift', backref='employee', lazy=True)
 
-    def __init__(self, name, compatible_kids, incompatible_kids, employee_infos):
+    def __init__(self, name, compatible_kids, incompatible_kids, employee_infos, shifts):
         self.name = name
         self.compatible_kids = compatible_kids
         self.incompatible_kids = incompatible_kids
         self.employee_infos = employee_infos
+        self.shifts = shifts
 
 
 # EmployeeInfo Model
@@ -104,14 +124,16 @@ class Kid(db.Model):
     compatible_employees = db.relationship("Employee", secondary=compatible, back_populates="compatible_kids")
     incompatible_employees = db.relationship("Employee", secondary=incompatible, back_populates="incompatible_kids")
     kid_infos = db.relationship('KidInfo', backref='kid', lazy=True)
+    shifts = db.relationship('Shift', backref='kid', lazy=True)
 
-    def __init__(self, name, grade, group_id, compatible_employees, incompatible_employees, kid_infos):
+    def __init__(self, name, grade, group_id, compatible_employees, incompatible_employees, kid_infos, shifts):
         self.name = name
         self.grade = grade
         self.group_id = group_id
         self.compatible_employees = compatible_employees
         self.incompatible_employees = incompatible_employees
         self.kid_infos = kid_infos
+        self.shifts = shifts
 
 
 # KidInfo Model
@@ -161,7 +183,21 @@ class AgendaSchema(SQLAlchemySchema):
     total_rotations = auto_field()
     kids_infos = auto_field()
     employees_infos = auto_field()
-    # shifts = auto_field()
+    shifts = auto_field()
+
+
+# Agenda Schema
+class ShiftSchema(SQLAlchemySchema):
+    class Meta:
+        model = Shift
+        load_instance = True
+
+    agenda_id = auto_field()
+    rotation = auto_field()
+    shift = auto_field()
+    employee_id = auto_field()
+    kid_id = auto_field()
+    # role_id = auto_field()
 
 
 # Group Schema
@@ -187,6 +223,7 @@ class EmployeeSchema(SQLAlchemySchema):
     compatible_kids = auto_field()
     incompatible_kids = auto_field()
     employee_infos = auto_field()
+    shifts = auto_field()
 
 
 # Employee Schema
@@ -215,6 +252,7 @@ class KidSchema(SQLAlchemySchema):
     compatible_employees = auto_field()
     incompatible_employees = auto_field()
     kid_infos = auto_field()
+    shifts = auto_field()
 
 
 # KidInfo Schema
@@ -241,6 +279,9 @@ class KidInfoSchema(SQLAlchemySchema):
 # Init schemas
 agenda_schema = AgendaSchema()
 agendas_schema = AgendaSchema(many=True)
+
+shift_schema = ShiftSchema()
+shifts_schema = ShiftSchema(many=True)
 
 group_schema = GroupSchema()
 groups_schema = GroupSchema(many=True)
@@ -269,8 +310,9 @@ def add_agenda():
     total_rotations = request.json['total_rotations']
     kids_infos = []
     employees_infos = []
+    shifts = []
 
-    new_agenda = Agenda(title, workday, rotation_interval, total_rotations, kids_infos, employees_infos)
+    new_agenda = Agenda(title, workday, rotation_interval, total_rotations, kids_infos, employees_infos, shifts)
 
     db.session.add(new_agenda)
     db.session.commit()
@@ -286,14 +328,14 @@ def get_agendas():
     return jsonify(result)
 
 
-# Get Single Agendas
+# Get Single Agenda
 @app.route('/agenda/<id>', methods=['GET'])
 def get_agenda(id):
     agenda = Agenda.query.get(id)
     return agenda_schema.dump(agenda)
 
 
-# Update a Agenda
+# Update Agenda
 @app.route('/agenda/<id>', methods=['PUT'])
 def update_agenda(id):
     agenda = Agenda.query.get(id)
@@ -308,9 +350,13 @@ def update_agenda(id):
     agenda.rotation_interval = rotation_interval
     agenda.total_rotations = total_rotations
 
+    shifts = agenda.shifts
+    for shift in shifts:
+        db.session.delete(shift)
+
     db.session.commit()
 
-    return group_schema.dump(agenda)
+    return agenda_schema.dump(agenda)
 
 
 # Delete Agenda
@@ -319,6 +365,7 @@ def delete_agenda(id):
     agenda = Agenda.query.get(id)
     kids_infos = agenda.kids_infos
     employees_infos = agenda.employees_infos
+    shifts = agenda.shifts
 
     for kid_info in kids_infos:
         db.session.delete(kid_info)
@@ -326,10 +373,8 @@ def delete_agenda(id):
     for employee_info in employees_infos:
         db.session.delete(employee_info)
 
-    # shifts = agenda.shifts
-    #     #
-    #     # for shift in shifts:
-    #     #     db.session.delete(shift)
+    for shift in shifts:
+        db.session.delete(shift)
 
     db.session.delete(agenda)
     db.session.commit()
@@ -339,8 +384,27 @@ def delete_agenda(id):
 
 # -------------------------------------------------
 
+# Update Shift
+@app.route('/shift/<id>', methods=['PUT'])
+def update_shift(id):
+    shift = Shift.query.get(id)
 
-# Create a Group
+    employee_id = request.json['employee_id']
+    kid_id = request.json['kid_id']
+    # role_id = request.json['role_id']
+
+    shift.employee_id = employee_id
+    shift.kid_id = kid_id
+    # shift.role_id = role_id
+
+    db.session.commit()
+
+    return shift_schema.dump(shift)
+
+
+# -------------------------------------------------
+
+# Create Group
 @app.route('/group', methods=['POST'])
 def add_group():
     title = request.json['title']
@@ -363,14 +427,14 @@ def get_groups():
     return jsonify(result)
 
 
-# Get Single Groups
+# Get Single Group
 @app.route('/group/<id>', methods=['GET'])
 def get_group(id):
     group = Group.query.get(id)
     return group_schema.dump(group)
 
 
-# Update a Group
+# Update Group
 @app.route('/group/<id>', methods=['PUT'])
 def update_group(id):
     group = Group.query.get(id)
@@ -404,15 +468,16 @@ def delete_group(id):
 # -------------------------------------------------
 
 
-# Create a Employee
+# Create Employee
 @app.route('/employee', methods=['POST'])
 def add_employee():
     name = request.json['name']
     compatible_kids = []
     incompatible_kids = []
     employee_infos = []
+    shifts = []
 
-    new_employee = Employee(name, compatible_kids, incompatible_kids, employee_infos)
+    new_employee = Employee(name, compatible_kids, incompatible_kids, employee_infos, shifts)
 
     db.session.add(new_employee)
     db.session.flush()
@@ -442,14 +507,14 @@ def get_employees():
     return jsonify(result)
 
 
-# Get Single Employees
+# Get Single Employee
 @app.route('/employee/<id>', methods=['GET'])
 def get_employee(id):
     employee = Employee.query.get(id)
     return employee_schema.dump(employee)
 
 
-# Update a Employee
+# Update Employee
 @app.route('/employee/<id>', methods=['PUT'])
 def update_employee(id):
     employee = Employee.query.get(id)
@@ -485,6 +550,7 @@ def delete_employee(id):
     compatible_kids = employee.compatible_kids
     incompatible_kids = employee.incompatible_kids
     employee_infos = employee.employee_infos
+    shifts = employee.shifts
 
     for compatible_kid in compatible_kids:
         kid = Kid.query.get(compatible_kid)
@@ -498,6 +564,9 @@ def delete_employee(id):
 
     for employee_info in employee_infos:
         db.session.delete(employee_info)
+
+    for shift in shifts:
+        db.session.delete(shift)
 
     db.session.delete(employee)
     db.session.commit()
@@ -578,8 +647,9 @@ def add_kid():
     compatible_employees = []
     incompatible_employees = []
     kid_infos = []
+    shifts = []
 
-    new_kid = Kid(name, grade, group_id, compatible_employees, incompatible_employees, kid_infos)
+    new_kid = Kid(name, grade, group_id, compatible_employees, incompatible_employees, kid_infos, shifts)
 
     db.session.add(new_kid)
     db.session.flush()
@@ -656,6 +726,7 @@ def delete_kid(id):
     compatible_employees = kid.compatible_kids
     incompatible_employees = kid.incompatible_kids
     kid_infos = kid.kid_infos
+    shifts = kid.shifts
 
     for compatible_employee in compatible_employees:
         employee = Employee.query.get(compatible_employee)
@@ -669,6 +740,9 @@ def delete_kid(id):
 
     for kid_info in kid_infos:
         db.session.delete(kid_info)
+
+    for shift in shifts:
+        db.session.delete(shift)
 
     db.session.delete(kid)
     db.session.commit()
