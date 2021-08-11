@@ -408,9 +408,11 @@ def delete_group(id):
 @app.route('/employee', methods=['POST'])
 def add_employee():
     name = request.json['name']
+    compatible_kids = []
+    incompatible_kids = []
     employee_infos = []
 
-    new_employee = Employee(name, [], [], employee_infos)
+    new_employee = Employee(name, compatible_kids, incompatible_kids, employee_infos)
 
     db.session.add(new_employee)
     db.session.flush()
@@ -573,9 +575,11 @@ def add_kid():
     name = request.json['name']
     grade = request.json['grade']
     group_id = request.json['group_id']
+    compatible_employees = []
+    incompatible_employees = []
     kid_infos = []
 
-    new_kid = Kid(name, grade, group_id, [], [], kid_infos)
+    new_kid = Kid(name, grade, group_id, compatible_employees, incompatible_employees, kid_infos)
 
     db.session.add(new_kid)
     db.session.flush()
