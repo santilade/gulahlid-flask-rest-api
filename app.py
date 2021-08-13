@@ -73,7 +73,7 @@ class Shift(db.Model):
 # Role Model
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(1000), nullable=False)
     employees_needed = db.Column(db.Integer, nullable=False)
     employee_proportion = db.Column(db.String(100), nullable=False)  # total / per group
@@ -256,7 +256,7 @@ class EmployeeSchema(SQLAlchemySchema):
     shifts = auto_field()
 
 
-# Employee Schema
+# EmployeeInfo Schema
 class EmployeeInfoSchema(SQLAlchemySchema):
     class Meta:
         model = EmployeeInfo
@@ -480,13 +480,13 @@ def update_role(id):
     employee_proportion = request.json['employee_proportion']
 
     role.title = title
-    role.color = description
-    role.color = employees_needed
-    role.color = employee_proportion
+    role.description = description
+    role.employees_needed = employees_needed
+    role.employee_proportion = employee_proportion
 
     db.session.commit()
 
-    return group_schema.dump(role)
+    return role_schema.dump(role)
 
 
 # Delete Role
