@@ -59,15 +59,32 @@ class Shift(db.Model):
     shift = db.Column(db.String(100), nullable=False)  # morning / afternoon
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
-    # role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
-    def __init__(self, agenda_id, rotation, shift, employee_id, kid_id):
+    def __init__(self, agenda_id, rotation, shift, employee_id, kid_id, role_id):
         self.agenda_id = agenda_id
         self.rotation = rotation
         self.shift = shift
         self.employee_id = employee_id
         self.kid_id = kid_id
-        # self.role_id = role_id
+        self.role_id = role_id
+
+
+# Role Model
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(1000), nullable=False)
+    employees_needed = db.Column(db.Integer, nullable=False)
+    employee_proportion = db.Column(db.String(100), nullable=False)  # total / per group
+    shifts = db.relationship('Shift', backref='role', lazy=True)
+
+    def __init__(self, title, description, employees_needed, employee_proportion, shifts):
+        self.title = title
+        self.description = description
+        self.employees_needed = employees_needed
+        self.employee_proportion = employee_proportion
+        self.shifts = shifts
 
 
 # Group Model
@@ -186,7 +203,7 @@ class AgendaSchema(SQLAlchemySchema):
     shifts = auto_field()
 
 
-# Agenda Schema
+# Shift Schema
 class ShiftSchema(SQLAlchemySchema):
     class Meta:
         model = Shift
@@ -197,7 +214,20 @@ class ShiftSchema(SQLAlchemySchema):
     shift = auto_field()
     employee_id = auto_field()
     kid_id = auto_field()
-    # role_id = auto_field()
+    role_id = auto_field()
+
+
+# Role Schema
+class RoleSchema(SQLAlchemySchema):
+    class Meta:
+        model = Role
+        load_instance = True
+
+    title = auto_field()
+    description = auto_field()
+    employees_needed = auto_field()
+    employee_proportion = auto_field()
+    shifts = auto_field()
 
 
 # Group Schema
@@ -282,6 +312,9 @@ agendas_schema = AgendaSchema(many=True)
 
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)
+
+role_schema = RoleSchema()
+roles_schema = RoleSchema(many=True)
 
 group_schema = GroupSchema()
 groups_schema = GroupSchema(many=True)
@@ -391,15 +424,80 @@ def update_shift(id):
 
     employee_id = request.json['employee_id']
     kid_id = request.json['kid_id']
-    # role_id = request.json['role_id']
+    role_id = request.json['role_id']
 
     shift.employee_id = employee_id
     shift.kid_id = kid_id
-    # shift.role_id = role_id
+    shift.role_id = role_id
 
     db.session.commit()
 
     return shift_schema.dump(shift)
+
+
+# -------------------------------------------------
+
+# Create Role
+@app.route('/role', methods=['POST'])
+def add_role():
+    title = request.json['title']
+    description = request.json['description']
+    employees_needed = request.json['employees_needed']
+    employee_proportion = request.json['employee_proportion']
+    shifts = []
+
+    new_role = Role(title, description, employees_needed, employee_proportion, shifts)
+
+    db.session.add(new_role)
+    db.session.commit()
+
+    return role_schema.dump(new_role)
+
+
+# Get All Roles
+@app.route('/role', methods=['GET'])
+def get_roles():
+    all_roles = Role.query.all()
+    result = roles_schema.dump(all_roles)
+    return jsonify(result)
+
+
+# Get Single Role
+@app.route('/role/<id>', methods=['GET'])
+def get_role(id):
+    role = Role.query.get(id)
+    return role_schema.dump(role)
+
+
+# Update Role
+@app.route('/role/<id>', methods=['PUT'])
+def update_role(id):
+    role = Role.query.get(id)
+
+    title = request.json['title']
+    description = request.json['description']
+    employees_needed = request.json['employees_needed']
+    employee_proportion = request.json['employee_proportion']
+
+    role.title = title
+    role.color = description
+    role.color = employees_needed
+    role.color = employee_proportion
+
+    db.session.commit()
+
+    return group_schema.dump(role)
+
+
+# Delete Role
+@app.route('/role/<id>', methods=['DELETE'])
+def delete_role(id):
+    role = Role.query.get(id)
+
+    db.session.delete(role)
+    db.session.commit()
+
+    return role_schema.dump(role)
 
 
 # -------------------------------------------------
