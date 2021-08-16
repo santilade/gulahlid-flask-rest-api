@@ -6,10 +6,13 @@ from .schemas import agenda_schema, agendas_schema, shift_schema, role_schema, r
     kids_schema, kid_info_schema, kids_infos_schema
 
 
+# Defining as a blueprint allows to store routes in different documents or "blueprints"
 controller = Blueprint('controller', __name__)
 
 
-# Create a Agenda
+# ///////////////// AGENDA /////////////////
+
+# Create Agenda
 @controller.route('/agenda', methods=['POST'])
 def add_agenda():
     title = request.json['title']
@@ -90,7 +93,7 @@ def delete_agenda(id):
     return agenda_schema.dump(agenda)
 
 
-# -------------------------------------------------
+# ///////////////// SHIFT /////////////////
 
 # Update Shift
 @controller.route('/shift/<id>', methods=['PUT'])
@@ -110,7 +113,7 @@ def update_shift(id):
     return shift_schema.dump(shift)
 
 
-# -------------------------------------------------
+# ///////////////// ROLE /////////////////
 
 # Create Role
 @controller.route('/role', methods=['POST'])
@@ -175,7 +178,7 @@ def delete_role(id):
     return role_schema.dump(role)
 
 
-# -------------------------------------------------
+# ///////////////// GROUP /////////////////
 
 # Create Group
 @controller.route('/group', methods=['POST'])
@@ -238,8 +241,7 @@ def delete_group(id):
     return group_schema.dump(group)
 
 
-# -------------------------------------------------
-
+# ///////////////// EMPLOYEE /////////////////
 
 # Create Employee
 @controller.route('/employee', methods=['POST'])
@@ -347,8 +349,7 @@ def delete_employee(id):
     return employee_schema.dump(employee)
 
 
-# -------------------------------------------------
-
+# ///////////////// EMPLOYEE INFO /////////////////
 
 # Create Employee Info
 @controller.route('/employee_info', methods=['POST'])
@@ -408,8 +409,7 @@ def delete_employee_info(id):
     return employee_info_schema.dump(employee_info)
 
 
-# -------------------------------------------------
-
+# ///////////////// KID /////////////////
 
 # Create Kid
 @controller.route('/kid', methods=['POST'])
@@ -523,8 +523,7 @@ def delete_kid(id):
     return kid_schema.dump(kid)
 
 
-# -------------------------------------------------
-
+# ///////////////// KID INFO /////////////////
 
 # Create Kid Info
 @controller.route('/kid_info', methods=['POST'])

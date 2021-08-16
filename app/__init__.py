@@ -8,24 +8,25 @@ import secrets
 db = SQLAlchemy()
 # Name database:
 DB_NAME = "db.sqlite"
+# Generate random key:
 GENERATED_KEY = secrets.token_urlsafe(30)
 
 
 def create_app():
     # Initialize flask:
     app = Flask(__name__)
-    # Encrypt cookies and session data (should be randomly generated):
+    # Encrypt cookies and session data:
     app.config['SECRET_KEY'] = GENERATED_KEY
-
+    # Disable track modifications
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     # Database location:
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     # Initialize database in this app:
     db.init_app(app)
 
-    # Import controller:
+    # Import blueprints:
     from .controller import controller
-    # Register controller:
+    # Register blueprints:
     app.register_blueprint(controller, url_prefix='/')  # Url_prefix creates subdomains
 
     # Create database tables if needed:
