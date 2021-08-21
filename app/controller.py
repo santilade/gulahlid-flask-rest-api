@@ -5,6 +5,7 @@ from .schemas import agenda_schema, agendas_schema, shift_schema, role_schema, r
     groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, \
     kids_schema, kid_info_schema, kids_infos_schema
 import requests
+import json
 
 
 API_ENDPOINT = "http://127.0.0.1:5000/"
@@ -54,27 +55,17 @@ def update_agenda(id):
     agenda = Agenda.query.get(id)
 
     title = request.json['title']
-    workday = request.json['workday']
-    rotation_interval = request.json['rotation_interval']
-    total_rotations = request.json['total_rotations']
-
     agenda.title = title
-    agenda.workday = workday
-    agenda.rotation_interval = rotation_interval
-    agenda.total_rotations = total_rotations
 
     employees_infos = request.json['employees_infos']
     for employee_info in employees_infos:
-        response = requests.post(API_ENDPOINT + '/employee_info', data=employee_info)
+        response = requests.post(API_ENDPOINT + '/employee_info', json=employee_info)
         print(response.text)
 
     kids_infos = request.json['kids_infos']
     for kid_info in kids_infos:
-        print(kid_info)
-
-    shifts = agenda.shifts
-    for shift in shifts:
-        db.session.delete(shift)
+        response = requests.post(API_ENDPOINT + '/kid_info', json=kid_info)
+        print(response.text)
 
     db.session.commit()
 
