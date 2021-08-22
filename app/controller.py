@@ -1,14 +1,13 @@
 from flask import Blueprint, request, jsonify
 from app import db
+from . import API_ENDPOINT
 from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
 from .schemas import agenda_schema, agendas_schema, shift_schema, role_schema, roles_schema, group_schema, \
     groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, \
     kids_schema, kid_info_schema, kids_infos_schema
 import requests
-import json
 
 
-API_ENDPOINT = "http://127.0.0.1:5000/"
 # Defining as a blueprint allows to store routes in different documents or "blueprints"
 controller = Blueprint('controller', __name__)
 

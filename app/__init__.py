@@ -10,6 +10,7 @@ db = SQLAlchemy()
 DB_NAME = "db.sqlite"
 # Generate random key:
 GENERATED_KEY = secrets.token_urlsafe(30)
+API_ENDPOINT = "http://127.0.0.1:5000/"
 
 
 def create_app():
