@@ -2,9 +2,9 @@ from flask import Blueprint, request, jsonify
 from app import db
 from . import API_ENDPOINT
 from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
-from .schemas import agenda_schema, agendas_schema, shift_schema, role_schema, roles_schema, group_schema, \
-    groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, \
-    kids_schema, kid_info_schema, kids_infos_schema
+from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, role_schema, roles_schema, \
+    group_schema, groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema,\
+    kid_schema, kids_schema, kid_info_schema, kids_infos_schema
 import requests
 
 
@@ -12,41 +12,60 @@ import requests
 generator = Blueprint('generator', __name__)
 
 
-# ///////////////// AGENDA /////////////////
+# ///////////////// GENERATOR /////////////////
 
-
-# get agenda
-
-# get dictionary of unassigned_shifts
-# get dictionary of free_employees
-
-# get dictionary of difficult kids and their circle of employees
-# get dictionary of kids with two employees
-
-# create shifts
 
 class AgendaGenerator:
     def __init__(self, agenda_id):
         self.agenda = Agenda.query.get(agenda_id)
         self.employees_infos = []  # [EmployeeInfo, EmployeeInfo, EmployeeInfo, ...]
+        self.kids_infos = []  # [KidInfo, KidInfo, KidInfo, ...]
         self.unassigned_shifts = []  # [Shift, Shift, Shift, ...]
         self.free_employees = {}  # {"week 1": {"Monday": [Employee, Employee, ...],"Tuesday": [], ...}, "week 2": ...}
         self.employees_accumulated_workload = {}  # {employee id (int): accumulated workload (int), ...}
         self.closed_circles = {}  # {kid id: [Employee, Employee, ...], kid id: [Employee, Employee, ...]}
 
     def run(self):
-        response = self.get_employees_infos() + " / " + self.set_unassigned_shifts()
+        response = {
+            "get_infos()":             {
+                                        "Status": self.get_infos(),
+                                        "employees_infos": employees_infos_schema.dump(self.employees_infos),
+                                        "kids_infos": kids_infos_schema.dump(self.kids_infos)
+                                       },
+
+            "set_unassigned_shifts()": {
+                                        "Status": self.set_unassigned_shifts(),
+                                        "unassigned_shifts": shifts_schema.dump(self.unassigned_shifts)
+                                       }
+        }
         return response
 
-    def get_employees_infos(self):
+    def get_infos(self):
+        # get employees_infos
         filtered_employees_infos = EmployeeInfo.query.filter_by(agenda_id=self.agenda.id)
         for employee_info in filtered_employees_infos:
             self.employees_infos.append(employee_info)
-        return "SUCCESSFULLY RAN: get_employees_infos()"
+
+        # get kids_infos
+        filtered_kids_infos = KidInfo.query.filter_by(agenda_id=self.agenda.id)
+        for kid_info in filtered_kids_infos:
+            self.kids_infos.append(kid_info)
+
+        return "SUCCESS"
 
     def set_unassigned_shifts(self):
-        return "SUCCESSFULLY RAN: set_unassigned_shifts()"
+        # filtered_kids_infos = KidInfo.query.filter_by(agenda_id=self.agenda.id)
+        #
+        # if self.agenda.rotation_interval == 'daily rotations':
+        #     for day in range(1, self.agenda.total_rotations + 1):
+        #         for kid_info in filtered_kids_infos:
+        #             if kid_info.attendance["day " + day]:
+        #                 print("foo")
 
+        return "SUCCESS"
+
+
+# ///////////////// RUN GENERATOR /////////////////
 
 # Create Agenda
 @generator.route('/generator', methods=['POST'])
