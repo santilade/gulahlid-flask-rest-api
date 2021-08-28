@@ -35,14 +35,17 @@ class AgendaGenerator:
         self.closed_circles = {}  # {kid id: [Employee, Employee, ...], kid id: [Employee, Employee, ...]}
 
     def run(self):
-        self.get_employees_infos()
-        return jsonify(1)
+        response = self.get_employees_infos() + " / " + self.set_unassigned_shifts()
+        return response
 
     def get_employees_infos(self):
         filtered_employees_infos = EmployeeInfo.query.filter_by(agenda_id=self.agenda.id)
         for employee_info in filtered_employees_infos:
             self.employees_infos.append(employee_info)
-        return self.employees_infos
+        return "SUCCESSFULLY RAN: get_employees_infos()"
+
+    def set_unassigned_shifts(self):
+        return "SUCCESSFULLY RAN: set_unassigned_shifts()"
 
 
 # Create Agenda
@@ -50,9 +53,8 @@ class AgendaGenerator:
 def run_generator():
     agenda_id = request.json['agenda_id']
     new_generator = AgendaGenerator(agenda_id)
-    response = new_generator.get_employees_infos()
-    print(response)
-    return jsonify(agenda_id)
+    response = new_generator.run()
+    return jsonify(response)
 
 
 # Create Agenda
