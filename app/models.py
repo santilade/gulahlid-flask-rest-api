@@ -21,6 +21,7 @@ class Agenda(db.Model):
     total_rotations = db.Column(db.Integer, nullable=False)
     kids_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
     employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
+    # active_roles = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
     shifts = db.relationship('Shift', backref='agenda', lazy=True)
 
     def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos, shifts):

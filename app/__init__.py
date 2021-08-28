@@ -27,8 +27,10 @@ def create_app():
 
     # Import blueprints:
     from .controller import controller
+    from .generator import generator
     # Register blueprints:
     app.register_blueprint(controller, url_prefix='/')  # Url_prefix creates subdomains
+    app.register_blueprint(generator, url_prefix='/')
 
     # Create database tables if needed:
     create_db_tables(app)
