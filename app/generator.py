@@ -51,7 +51,10 @@ class AgendaGenerator:
         for kid_info in filtered_kids_infos:
             self.kids_infos.append(kid_info)
 
-        return "SUCCESS"
+        if len(self.employees_infos) >= 1 and len(self.kids_infos) >= 1:
+            return "SUCCESS"
+        else:
+            return "NOT ABLE TO GET ALL INFOS"
 
     def set_unassigned_shifts(self):
         # filtered_kids_infos = KidInfo.query.filter_by(agenda_id=self.agenda.id)
