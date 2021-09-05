@@ -39,6 +39,7 @@ class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
     rotation = db.Column(db.Integer, nullable=False)
+    # weekday = db.Column(db.String(100))
     shift = db.Column(db.String(100), nullable=False)  # morning / afternoon
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
