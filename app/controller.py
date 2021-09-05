@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import db
 from . import API_ENDPOINT
 from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
-from .schemas import agenda_schema, agendas_schema, shift_schema, role_schema, roles_schema, group_schema, \
+from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, role_schema, roles_schema, group_schema, \
     groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, \
     kids_schema, kid_info_schema, kids_infos_schema
 import requests
@@ -96,6 +96,21 @@ def delete_agenda(id):
 
 # ///////////////// SHIFT /////////////////
 
+# Get All Shifts
+@controller.route('/shift', methods=['GET'])
+def get_shifts():
+    all_shifts = Shift.query.all()
+    result = shifts_schema.dump(all_shifts)
+    return jsonify(result)
+
+
+# Get Single Shift
+@controller.route('/shift/<id>', methods=['GET'])
+def get_agenda(id):
+    shift = Shift.query.get(id)
+    return agenda_schema.dump(shift)
+
+
 # Update Shift
 @controller.route('/shift/<id>', methods=['PUT'])
 def update_shift(id):
@@ -112,6 +127,17 @@ def update_shift(id):
     db.session.commit()
 
     return shift_schema.dump(shift)
+
+
+# Delete Shift
+@controller.route('/shift/<id>', methods=['DELETE'])
+def delete_shift(id):
+    shift = Shift.query.get(id)
+
+    db.session.delete(shift)
+    db.session.commit()
+
+    return agenda_schema.dump(shift)
 
 
 # ///////////////// ROLE /////////////////

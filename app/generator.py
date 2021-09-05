@@ -57,13 +57,19 @@ class AgendaGenerator:
             return "NOT ABLE TO GET ALL INFOS"
 
     def set_unassigned_shifts(self):
-        # filtered_kids_infos = KidInfo.query.filter_by(agenda_id=self.agenda.id)
-        #
-        # if self.agenda.rotation_interval == 'daily rotations':
-        #     for day in range(1, self.agenda.total_rotations + 1):
-        #         for kid_info in filtered_kids_infos:
-        #             if kid_info.attendance["day " + day]:
-        #                 print("foo")
+        if self.agenda.rotation_interval == 'daily rotations':
+            print("daily rotations")
+            if self.agenda.workday == 'part-time':
+                print("part-time")
+                for rotation in range(1, self.agenda.total_rotations + 1):
+                    print("rotation "+str(rotation))
+                    for kid_info in self.kids_infos:
+                        new_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id, 0)
+
+                        db.session.add(new_shift)
+                        db.session.commit()
+
+                        self.unassigned_shifts.append(new_shift)
 
         return "SUCCESS"
 
