@@ -24,6 +24,7 @@ class ShiftSchema(SQLAlchemySchema):
         model = Shift
         load_instance = True
 
+    id = auto_field()
     agenda_id = auto_field()
     rotation = auto_field()
     shift = auto_field()
@@ -38,6 +39,7 @@ class RoleSchema(SQLAlchemySchema):
         model = Role
         load_instance = True
 
+    id = auto_field()
     title = auto_field()
     description = auto_field()
     employees_needed = auto_field()

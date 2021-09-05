@@ -106,7 +106,7 @@ def get_shifts():
 
 # Get Single Shift
 @controller.route('/shift/<id>', methods=['GET'])
-def get_agenda(id):
+def get_shift(id):
     shift = Shift.query.get(id)
     return agenda_schema.dump(shift)
 

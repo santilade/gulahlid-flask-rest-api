@@ -20,7 +20,8 @@ class AgendaGenerator:
         self.agenda = Agenda.query.get(agenda_id)
         self.employees_infos = []  # [EmployeeInfo, EmployeeInfo, EmployeeInfo, ...]
         self.kids_infos = []  # [KidInfo, KidInfo, KidInfo, ...]
-        self.unassigned_shifts = []  # [Shift, Shift, Shift, ...]
+        self.unassigned_shifts = {}  # {"day 1": [Shift, Shift, Shift, ...]}
+        self.serialized_unassigned_shifts = {}
         self.free_employees = {}  # {"week 1": {"Monday": [Employee, Employee, ...],"Tuesday": [], ...}, "week 2": ...}
         self.employees_accumulated_workload = {}  # {employee id (int): accumulated workload (int), ...}
         self.closed_circles = {}  # {kid id: [Employee, Employee, ...], kid id: [Employee, Employee, ...]}
@@ -35,7 +36,7 @@ class AgendaGenerator:
 
             "set_unassigned_shifts()": {
                                         "Status": self.set_unassigned_shifts(),
-                                        "unassigned_shifts": shifts_schema.dump(self.unassigned_shifts)
+                                        "unassigned_shifts": self.serialized_unassigned_shifts
                                        }
         }
         return response
@@ -58,18 +59,22 @@ class AgendaGenerator:
 
     def set_unassigned_shifts(self):
         if self.agenda.rotation_interval == 'daily rotations':
-            print("daily rotations")
             if self.agenda.workday == 'part-time':
-                print("part-time")
                 for rotation in range(1, self.agenda.total_rotations + 1):
-                    print("rotation "+str(rotation))
+                    temp_list = []
+
                     for kid_info in self.kids_infos:
-                        new_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id, 0)
+                        if kid_info.attendance["day "+str(rotation)]:
+                            new_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id, 0)
 
-                        db.session.add(new_shift)
-                        db.session.commit()
+                            db.session.add(new_shift)
+                            db.session.commit()
 
-                        self.unassigned_shifts.append(new_shift)
+                            temp_list.append(new_shift)
+
+                    key = "day "+str(rotation)
+                    self.unassigned_shifts[key] = temp_list
+                    self.serialized_unassigned_shifts[key] = shifts_schema.dump(temp_list)
 
         return "SUCCESS"
 
