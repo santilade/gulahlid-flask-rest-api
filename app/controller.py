@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from . import API_ENDPOINT
+from . import API_BASE_URL
 from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
 from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, role_schema, roles_schema, group_schema, \
     groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, \
@@ -58,12 +58,12 @@ def update_agenda(id):
 
     employees_infos = request.json['employees_infos']
     for employee_info in employees_infos:
-        response = requests.post(API_ENDPOINT + '/employee_info', json=employee_info)
+        response = requests.post(API_BASE_URL + '/employee_info', json=employee_info)
         print(response.text)
 
     kids_infos = request.json['kids_infos']
     for kid_info in kids_infos:
-        response = requests.post(API_ENDPOINT + '/kid_info', json=kid_info)
+        response = requests.post(API_BASE_URL + '/kid_info', json=kid_info)
         print(response.text)
 
     db.session.commit()
