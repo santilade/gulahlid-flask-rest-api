@@ -58,7 +58,7 @@ class AgendaGenerator:
 
                 for rotation in range(1, self.agenda.total_rotations + 1):
                     key = "day "+str(rotation)
-                    temp_list = []
+                    day_list = []
 
                     for kid_info in self.kids_infos:
                         if kid_info.attendance[key]:
@@ -67,10 +67,32 @@ class AgendaGenerator:
                             db.session.add(new_shift)
                             db.session.commit()
 
-                            temp_list.append(new_shift)
+                            day_list.append(new_shift)
 
-                    self.unassigned_shifts[key] = temp_list
-                    self.serialized_unassigned_shifts[key] = shifts_schema.dump(temp_list)
+                    self.unassigned_shifts[key] = day_list
+                    self.serialized_unassigned_shifts[key] = shifts_schema.dump(day_list)
+
+            elif self.agenda.workday == 'full-time':
+
+                for rotation in range(1, self.agenda.total_rotations + 1):
+                    key = "day "+str(rotation)
+                    morning_list = []
+                    afternoon_list = []
+
+                    for kid_info in self.kids_infos:
+                        if kid_info.attendance[key]:
+                            new_morning_shift = Shift(self.agenda.id, rotation, "morning", 0, kid_info.kid_id, 0)
+                            new_afternoon_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id, 0)
+
+                            db.session.add(new_morning_shift, new_afternoon_shift)
+                            db.session.commit()
+
+                            morning_list.append(new_morning_shift)
+                            afternoon_list.append(new_afternoon_shift)
+
+                    self.unassigned_shifts[key] = {"morning": morning_list, "afternoon": afternoon_list}
+                    self.serialized_unassigned_shifts[key] = {"morning": shifts_schema.dump(morning_list),
+                                                              "afternoon": shifts_schema.dump(afternoon_list)}
 
         return "DONE!"
 
