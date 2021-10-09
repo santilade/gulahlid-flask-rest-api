@@ -54,17 +54,20 @@ def update_agenda(id):
     agenda = Agenda.query.get(id)
 
     title = request.json['title']
-    agenda.title = title
+    if title != "":
+        agenda.title = title
 
     employees_infos = request.json['employees_infos']
-    for employee_info in employees_infos:
-        response = requests.post(API_BASE_URL + '/employee_info', json=employee_info)
-        print(response.text)
+    if employees_infos != "":
+        for employee_info in employees_infos:
+            response = requests.post(API_BASE_URL + '/employee_info', json=employee_info)
+            print(response.text)
 
     kids_infos = request.json['kids_infos']
-    for kid_info in kids_infos:
-        response = requests.post(API_BASE_URL + '/kid_info', json=kid_info)
-        print(response.text)
+    if kids_infos != "":
+        for kid_info in kids_infos:
+            response = requests.post(API_BASE_URL + '/kid_info', json=kid_info)
+            print(response.text)
 
     db.session.commit()
 

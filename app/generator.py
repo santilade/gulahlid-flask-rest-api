@@ -85,8 +85,8 @@ class AgendaGenerator:
 
                     for kid_info in self.kids_infos:
                         if kid_info.attendance[key]:
-                            new_morning_shift = Shift(self.agenda.id, rotation, "morning", 0, kid_info.kid_id, 0)
-                            new_afternoon_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id, 0)
+                            new_morning_shift = Shift(self.agenda.id, rotation, "morning", 0, kid_info.kid_id)
+                            new_afternoon_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id)
 
                             db.session.add(new_morning_shift, new_afternoon_shift)
                             db.session.commit()
