@@ -21,7 +21,6 @@ class Agenda(db.Model):
     total_rotations = db.Column(db.Integer, nullable=False)
     kids_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
     employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
-    # active_roles = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
     shifts = db.relationship('Shift', backref='agenda', lazy=True)
 
     def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos, shifts):
@@ -43,32 +42,13 @@ class Shift(db.Model):
     shift = db.Column(db.String(100), nullable=False)  # morning / afternoon
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
 
-    def __init__(self, agenda_id, rotation, shift, employee_id, kid_id, role_id):
+    def __init__(self, agenda_id, rotation, shift, employee_id, kid_id):
         self.agenda_id = agenda_id
         self.rotation = rotation
         self.shift = shift
         self.employee_id = employee_id
         self.kid_id = kid_id
-        self.role_id = role_id
-
-
-# Role Model
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), unique=True, nullable=False)
-    description = db.Column(db.String(1000), nullable=False)
-    employees_needed = db.Column(db.Integer, nullable=False)
-    employee_proportion = db.Column(db.String(100), nullable=False)  # total / per group
-    shifts = db.relationship('Shift', backref='role', lazy=True)
-
-    def __init__(self, title, description, employees_needed, employee_proportion, shifts):
-        self.title = title
-        self.description = description
-        self.employees_needed = employees_needed
-        self.employee_proportion = employee_proportion
-        self.shifts = shifts
 
 
 # Group Model

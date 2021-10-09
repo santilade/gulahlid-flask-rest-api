@@ -1,5 +1,5 @@
 from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field
-from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
+from .models import Agenda, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
 
 
 # Agenda Schema
@@ -30,21 +30,6 @@ class ShiftSchema(SQLAlchemySchema):
     shift = auto_field()
     employee_id = auto_field()
     kid_id = auto_field()
-    role_id = auto_field()
-
-
-# Role Schema
-class RoleSchema(SQLAlchemySchema):
-    class Meta:
-        model = Role
-        load_instance = True
-
-    id = auto_field()
-    title = auto_field()
-    description = auto_field()
-    employees_needed = auto_field()
-    employee_proportion = auto_field()
-    shifts = auto_field()
 
 
 # Group Schema
@@ -129,9 +114,6 @@ agendas_schema = AgendaSchema(many=True)
 
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)
-
-role_schema = RoleSchema()
-roles_schema = RoleSchema(many=True)
 
 group_schema = GroupSchema()
 groups_schema = GroupSchema(many=True)

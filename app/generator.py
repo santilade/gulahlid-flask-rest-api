@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from . import API_BASE_URL
-from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
-from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, role_schema, roles_schema, \
-    group_schema, groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, \
-    kid_schema, kids_schema, kid_info_schema, kids_infos_schema
+from .models import Agenda, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
+from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, group_schema, groups_schema, \
+    employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, kids_schema, \
+    kid_info_schema, kids_infos_schema
 import requests
 
 # Defining as a blueprint allows to store routes in different documents or "blueprints"
@@ -36,6 +36,10 @@ class AgendaGenerator:
             "set_unassigned_shifts()": {
                 "Status": self.set_unassigned_shifts(),
                 "unassigned_shifts": self.serialized_unassigned_shifts
+            },
+
+            "set_free_employees()": {
+                "Status": self.set_free_employees(),
             }
         }
         return response
@@ -96,8 +100,9 @@ class AgendaGenerator:
 
         return "DONE!"
 
-    # def set_free_employees(self):
+    def set_free_employees(self):
 
+        return "DONE!"
     # def calc_employees_accumulated_workload(self):
 
     # def set_kids_closed_circles(self):

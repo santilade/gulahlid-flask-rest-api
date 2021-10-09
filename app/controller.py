@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from . import API_BASE_URL
-from .models import Agenda, Shift, Role, Group, Employee, EmployeeInfo, Kid, KidInfo
-from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, role_schema, roles_schema, group_schema, \
+from .models import Agenda, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
+from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, group_schema, \
     groups_schema, employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, \
     kids_schema, kid_info_schema, kids_infos_schema
 import requests
@@ -118,11 +118,9 @@ def update_shift(id):
 
     employee_id = request.json['employee_id']
     kid_id = request.json['kid_id']
-    role_id = request.json['role_id']
 
     shift.employee_id = employee_id
     shift.kid_id = kid_id
-    shift.role_id = role_id
 
     db.session.commit()
 
@@ -138,71 +136,6 @@ def delete_shift(id):
     db.session.commit()
 
     return agenda_schema.dump(shift)
-
-
-# ///////////////// ROLE /////////////////
-
-# Create Role
-@controller.route('/role', methods=['POST'])
-def add_role():
-    title = request.json['title']
-    description = request.json['description']
-    employees_needed = request.json['employees_needed']
-    employee_proportion = request.json['employee_proportion']
-    shifts = []
-
-    new_role = Role(title, description, employees_needed, employee_proportion, shifts)
-
-    db.session.add(new_role)
-    db.session.commit()
-
-    return role_schema.dump(new_role)
-
-
-# Get All Roles
-@controller.route('/role', methods=['GET'])
-def get_roles():
-    all_roles = Role.query.all()
-    result = roles_schema.dump(all_roles)
-    return jsonify(result)
-
-
-# Get Single Role
-@controller.route('/role/<id>', methods=['GET'])
-def get_role(id):
-    role = Role.query.get(id)
-    return role_schema.dump(role)
-
-
-# Update Role
-@controller.route('/role/<id>', methods=['PUT'])
-def update_role(id):
-    role = Role.query.get(id)
-
-    title = request.json['title']
-    description = request.json['description']
-    employees_needed = request.json['employees_needed']
-    employee_proportion = request.json['employee_proportion']
-
-    role.title = title
-    role.description = description
-    role.employees_needed = employees_needed
-    role.employee_proportion = employee_proportion
-
-    db.session.commit()
-
-    return role_schema.dump(role)
-
-
-# Delete Role
-@controller.route('/role/<id>', methods=['DELETE'])
-def delete_role(id):
-    role = Role.query.get(id)
-
-    db.session.delete(role)
-    db.session.commit()
-
-    return role_schema.dump(role)
 
 
 # ///////////////// GROUP /////////////////
