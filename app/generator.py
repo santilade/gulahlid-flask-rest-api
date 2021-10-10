@@ -36,10 +36,6 @@ class AgendaGenerator:
             "set_unassigned_shifts()": {
                 "Status": self.set_unassigned_shifts(),
                 "unassigned_shifts": self.serialized_unassigned_shifts
-            },
-
-            "set_free_employees()": {
-                "Status": self.set_free_employees(),
             }
         }
         return response
@@ -56,53 +52,170 @@ class AgendaGenerator:
         return "DONE!"
 
     def set_unassigned_shifts(self):
-        if self.agenda.rotation_interval == 'daily rotations':
+        # # DAILY ROTATIONS
+        # if self.agenda.rotation_interval == 'daily rotations':
+        #     for rotation in range(1, self.agenda.total_rotations + 1):
+        #         day = "day "+str(rotation)
+        #
+        #         # part-time
+        #         if self.agenda.workday == 'part-time':
+        #             day_list = []
+        #
+        #             for kid_info in self.kids_infos:
+        #                 if kid_info.attendance[day]:
+        #                     new_shift = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id, 0)
+        #
+        #                     db.session.add(new_shift)
+        #                     db.session.commit()
+        #
+        #                     day_list.append(new_shift)
+        #
+        #             self.unassigned_shifts[day] = day_list
+        #             self.serialized_unassigned_shifts[day] = shifts_schema.dump(day_list)
+        #
+        #         # full-time
+        #         elif self.agenda.workday == 'full-time':
+        #             morning_list = []
+        #             afternoon_list = []
+        #
+        #             for kid_info in self.kids_infos:
+        #                 if kid_info.attendance[day]["morning"]:
+        #                     new_morning_shift = Shift(self.agenda.id, rotation, 0, "morning", 0, kid_info.kid_id)
+        #                     db.session.add(new_morning_shift)
+        #                     morning_list.append(new_morning_shift)
+        #
+        #                 if kid_info.attendance[day]["afternoon"]:
+        #                     new_afternoon_shift = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
+        #                     db.session.add(new_afternoon_shift)
+        #                     afternoon_list.append(new_afternoon_shift)
+        #
+        #                 db.session.commit()
+        #
+        #             self.unassigned_shifts[day] = {"morning": morning_list, "afternoon": afternoon_list}
+        #             self.serialized_unassigned_shifts[day] = {"morning": shifts_schema.dump(morning_list),
+        #                                                       "afternoon": shifts_schema.dump(afternoon_list)}
+        #
+        # # WEEKLY ROTATIONS
+        # elif self.agenda.rotation_interval == 'weekly rotations':
+        #     for rotation in range(1, self.agenda.total_rotations + 1):
+        #         week = "week "+str(rotation)
+        #
+        #         for weekday in range(1, 6):
+        #             day = "day "+str(weekday)
+        #
+        #             # part-time
+        #             if self.agenda.workday == 'part-time':
+        #                 day_list = []
+        #
+        #                 for kid_info in self.kids_infos:
+        #                     if kid_info.attendance[week][day]:
+        #                         new_shift = Shift(self.agenda.id, rotation, weekday, "afternoon", 0, kid_info.kid_id,
+        #                         0)
+        #
+        #                         db.session.add(new_shift)
+        #                         db.session.commit()
+        #
+        #                         day_list.append(new_shift)
+        #
+        #                 self.unassigned_shifts[week][day] = day_list
+        #                 self.serialized_unassigned_shifts[week][day] = shifts_schema.dump(day_list)
+        #
+        #             # full-time
+        #             elif self.agenda.workday == 'full-time':
+        #                 morning_list = []
+        #                 afternoon_list = []
+        #
+        #                 for kid_info in self.kids_infos:
+        #                     if kid_info.attendance[week][day]["morning"]:
+        #                         new_morning_shift = Shift(self.agenda.id, rotation, "morning", 0, kid_info.kid_id)
+        #                         db.session.add(new_morning_shift)
+        #                         morning_list.append(new_morning_shift)
+        #
+        #                     if kid_info.attendance[day]["afternoon"]:
+        #                         new_afternoon_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id)
+        #                         db.session.add(new_afternoon_shift)
+        #                         afternoon_list.append(new_afternoon_shift)
+        #
+        #                     db.session.commit()
+        #
+        #                 self.unassigned_shifts[day] = {"morning": morning_list, "afternoon": afternoon_list}
+        #                 self.serialized_unassigned_shifts[day] = {"morning": shifts_schema.dump(morning_list),
+        #                                                           "afternoon": shifts_schema.dump(afternoon_list)}
 
-            if self.agenda.workday == 'part-time':
-
+        for kid_info in self.kids_infos:
+            if self.agenda.rotation_interval == 'daily rotations':
                 for rotation in range(1, self.agenda.total_rotations + 1):
-                    key = "day "+str(rotation)
-                    day_list = []
+                    day = "day " + str(rotation)
+                    day_list = {"afternoon": []}
 
-                    for kid_info in self.kids_infos:
-                        if kid_info.attendance[key]:
-                            new_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id, 0)
+                    if kid_info.attendance[day]["afternoon"]:
+                        new_shift = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id, 0)
+                        db.session.add(new_shift)
+                        day_list["afternoon"].append(new_shift)
+                        if kid_info.employees_needed == 2:
+                            new_shift_2 = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id, 0)
+                            db.session.add(new_shift_2)
+                            day_list["afternoon"].append(new_shift_2)
 
+                    if self.agenda.workday == "full-time":
+                        day_list["morning"] = []
+                        if kid_info.attendance[day]["morning"]:
+                            new_shift = Shift(self.agenda.id, rotation, 0, "morning", 0, kid_info.kid_id, 0)
                             db.session.add(new_shift)
-                            db.session.commit()
+                            day_list["morning"].append(new_shift)
+                            if kid_info.employees_needed == 2:
+                                new_shift_2 = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id, 0)
+                                db.session.add(new_shift_2)
+                                day_list["morning"].append(new_shift_2)
 
-                            day_list.append(new_shift)
+                    db.session.commit()
 
-                    self.unassigned_shifts[key] = day_list
-                    self.serialized_unassigned_shifts[key] = shifts_schema.dump(day_list)
+                    self.unassigned_shifts[day] = day_list
+                    self.serialized_unassigned_shifts[day] = {"morning": shifts_schema.dump(day_list["morning"]),
+                                                              "afternoon": shifts_schema.dump(day_list["afternoon"])}
 
-            elif self.agenda.workday == 'full-time':
-
+            elif self.agenda.rotation_interval == 'weekly rotations':
                 for rotation in range(1, self.agenda.total_rotations + 1):
-                    key = "day "+str(rotation)
-                    morning_list = []
-                    afternoon_list = []
+                    week = "week " + str(rotation)
 
-                    for kid_info in self.kids_infos:
-                        if kid_info.attendance[key]:
-                            new_morning_shift = Shift(self.agenda.id, rotation, "morning", 0, kid_info.kid_id)
-                            new_afternoon_shift = Shift(self.agenda.id, rotation, "afternoon", 0, kid_info.kid_id)
+                    for weekday in range(1, 6):
+                        day = "day " + str(weekday)
+                        day_list = {"afternoon": []}
 
-                            db.session.add(new_morning_shift, new_afternoon_shift)
-                            db.session.commit()
+                        if kid_info.attendance[week][day]["afternoon"]:
+                            new_shift = Shift(self.agenda.id, rotation, weekday, "afternoon", 0, kid_info.kid_id, 0)
+                            db.session.add(new_shift)
+                            day_list["afternoon"].append(new_shift)
+                            if kid_info.employees_needed == 2:
+                                new_shift_2 = Shift(self.agenda.id, rotation, weekday, "afternoon", 0, kid_info.kid_id,
+                                                    0)
+                                db.session.add(new_shift_2)
+                                day_list["afternoon"].append(new_shift_2)
 
-                            morning_list.append(new_morning_shift)
-                            afternoon_list.append(new_afternoon_shift)
+                        if self.agenda.workday == "full-time":
+                            day_list["morning"] = []
+                            if kid_info.attendance[day]["morning"]:
+                                new_shift = Shift(self.agenda.id, rotation, weekday, "morning", 0, kid_info.kid_id, 0)
+                                db.session.add(new_shift)
+                                day_list["morning"].append(new_shift)
+                                if kid_info.employees_needed == 2:
+                                    new_shift_2 = Shift(self.agenda.id, rotation, weekday, "afternoon", 0,
+                                                        kid_info.kid_id, 0)
+                                    db.session.add(new_shift_2)
+                                    day_list["morning"].append(new_shift_2)
 
-                    self.unassigned_shifts[key] = {"morning": morning_list, "afternoon": afternoon_list}
-                    self.serialized_unassigned_shifts[key] = {"morning": shifts_schema.dump(morning_list),
-                                                              "afternoon": shifts_schema.dump(afternoon_list)}
+                        db.session.commit()
+
+                        self.unassigned_shifts[week][day] = day_list
+                        self.serialized_unassigned_shifts[week][day] = {"morning": shifts_schema.dump(
+                                                                                                day_list["morning"]),
+                                                                        "afternoon": shifts_schema.dump(
+                                                                                                day_list["afternoon"])}
 
         return "DONE!"
 
-    def set_free_employees(self):
+    # def set_free_employees(self):
 
-        return "DONE!"
     # def calc_employees_accumulated_workload(self):
 
     # def set_kids_closed_circles(self):
