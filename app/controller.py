@@ -111,7 +111,7 @@ def get_shifts():
 @controller.route('/shift/<id>', methods=['GET'])
 def get_shift(id):
     shift = Shift.query.get(id)
-    return agenda_schema.dump(shift)
+    return shift_schema.dump(shift)
 
 
 # Update Shift
@@ -138,7 +138,16 @@ def delete_shift(id):
     db.session.delete(shift)
     db.session.commit()
 
-    return agenda_schema.dump(shift)
+    return shift_schema.dump(shift)
+
+
+# Delete all Shifts
+@controller.route('/shift/all', methods=['DELETE'])
+def delete_all_shifts():
+    response = Shift.query.delete()
+    db.session.commit()
+
+    return jsonify("Deleted " + str(response) + " shifts")
 
 
 # ///////////////// GROUP /////////////////
