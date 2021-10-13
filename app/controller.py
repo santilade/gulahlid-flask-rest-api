@@ -292,8 +292,8 @@ def update_employee(id):
             kid = Kid.query.get(kid_id)
             kid.compatible_employees.append(employee)
             db.session.flush()
-    elif compatible_kids == 0:
-        employee.compatible_employees = []
+    elif compatible_kids is None:
+        employee.compatible_kids = []
         db.session.flush()
 
     if incompatible_kids:
@@ -303,22 +303,27 @@ def update_employee(id):
             kid = Kid.query.get(kid_id)
             kid.incompatible_employees.append(employee)
             db.session.flush()
-    elif incompatible_kids == 0:
-        employee.compatible_employees = []
+    elif incompatible_kids is None:
+        employee.incompatible_kids = []
         db.session.flush()
 
     if compatible_employees:
+        for old_compatible_employee in employee.compatible_employees:
+            old_compatible_employee.compatible_employees.remove(employee)
+            db.session.flush()
         employee.compatible_employees = []
         db.session.flush()
         for employee_id in compatible_employees:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + str(employee_id))
             compatible_employee = Employee.query.get(employee_id)
+            employee.compatible_employees.append(compatible_employee)
             compatible_employee.compatible_employees.append(employee)
             db.session.flush()
-    elif compatible_employees == 0:
+    elif compatible_employees is None:
+        for old_compatible_employee in employee.compatible_employees:
+            old_compatible_employee.compatible_employees.remove(employee)
+            db.session.flush()
         employee.compatible_employees = []
         db.session.flush()
-
 
     db.session.commit()
 

@@ -1,20 +1,17 @@
 from app import db
 
 employee_kid_compatible = db.Table('employee_kid_compatible',
-                                   db.Column('kid_id', db.Integer, db.ForeignKey('kid.id'), primary_key=True),
-                                   db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'), primary_key=True)
+                                   db.Column('kid_id', db.Integer, db.ForeignKey('kid.id')),
+                                   db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'))
                                    )
 
 employee_kid_incompatible = db.Table('employee_kid_incompatible',
-                                     db.Column('kid_id', db.Integer, db.ForeignKey('kid.id'), primary_key=True),
-                                     db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'),
-                                               primary_key=True)
+                                     db.Column('kid_id', db.Integer, db.ForeignKey('kid.id')),
+                                     db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'))
                                      )
 employee_employee_compatible = db.Table('employee_employee_compatible',
-                                        db.Column('employee_1', db.Integer, db.ForeignKey('employee.id'),
-                                                  primary_key=True),
-                                        db.Column('employee_2', db.Integer, db.ForeignKey('employee.id'),
-                                                  primary_key=True)
+                                        db.Column('compatible_id', db.Integer, db.ForeignKey('employee.id')),
+                                        db.Column('self_id', db.Integer, db.ForeignKey('employee.id'))
                                         )
 
 
@@ -77,18 +74,18 @@ class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
 
-    compatible_kids = db.relationship("Kid", secondary=employee_kid_compatible,
+    compatible_kids = db.relationship("Kid",
+                                      secondary=employee_kid_compatible,
                                       back_populates="compatible_employees")
-    incompatible_kids = db.relationship("Kid", secondary=employee_kid_incompatible,
+    incompatible_kids = db.relationship("Kid",
+                                        secondary=employee_kid_incompatible,
                                         back_populates="incompatible_employees")
-    parents = db.relationship('Employee', secondary=employee_employee_compatible,
-                              primaryjoin=id == employee_employee_compatible.c.employee_1,
-                              secondaryjoin=id == employee_employee_compatible.c.employee_2,
-                              backref='employee'
-                              )
-
-    compatible_employees = db.relationship("Employee", secondary=employee_employee_compatible,
-                                           back_populates="compatible_employees")
+    compatible_employees = db.relationship('Employee',
+                                           secondary=employee_employee_compatible,
+                                           primaryjoin=(employee_employee_compatible.c.compatible_id == id),
+                                           secondaryjoin=(employee_employee_compatible.c.self_id == id),
+                                           back_populates="compatible_employees",
+                                           lazy='dynamic')
 
     employee_infos = db.relationship('EmployeeInfo', backref='employee', lazy=True)
     shifts = db.relationship('Shift', backref='employee', lazy=True)
@@ -170,8 +167,3 @@ class KidInfo(db.Model):
         self.other_info = other_info
         self.attendance = attendance
         self.agenda_id = agenda_id
-
-
-class employee_employee_compatible(db.Model):
-    employee_1 = db.Column(db.Integer, db.ForeignKey('employee.id'), primary_key=True)
-    employee_2 = db.Column(db.Integer, db.ForeignKey('employee.id'), primary_key=True)
