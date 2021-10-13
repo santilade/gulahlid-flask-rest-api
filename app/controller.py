@@ -248,6 +248,7 @@ def add_employee():
     if compatible_employees:
         for employee_id in compatible_employees:
             compatible_employee = Employee.query.get(employee_id)
+            new_employee.compatible_employees.append(compatible_employee)
             compatible_employee.compatible_employees.append(new_employee)
             db.session.flush()
 
@@ -341,7 +342,6 @@ def delete_employee(id):
     employee_infos = employee.employee_infos
     shifts = employee.shifts
 
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + str(incompatible_kids))
 
     for compatible_kid in compatible_kids:
         compatible_kid.compatible_employees.remove(employee)
