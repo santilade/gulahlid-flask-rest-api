@@ -68,7 +68,6 @@ class EmployeeInfoSchema(SQLAlchemySchema):
 
     id = auto_field()
     employee_id = auto_field()
-    comments = auto_field()
     attendance = auto_field()
     agenda_id = auto_field()
 
@@ -97,15 +96,8 @@ class KidInfoSchema(SQLAlchemySchema):
 
     id = auto_field()
     kid_id = auto_field()
-    important = auto_field()
-    arrival_time = auto_field()
-    departure_time = auto_field()
-    medication_time = auto_field()
-    transport = auto_field()
-    wheelchair = auto_field()
     difficulty = auto_field()
     employees_needed = auto_field()
-    other_info = auto_field()
     attendance = auto_field()
     agenda_id = auto_field()
 

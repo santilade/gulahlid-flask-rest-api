@@ -29,13 +29,13 @@ def add_employee():
     if compatible_kids:
         for kid_id in compatible_kids:
             kid = Kid.query.get(kid_id)
-            kid.compatible_employees.append(new_employee)
+            new_employee.compatible_employees.append(kid)
             db.session.flush()
 
     if incompatible_kids:
         for kid_id in incompatible_kids:
             kid = Kid.query.get(kid_id)
-            kid.incompatible_employees.append(new_employee)
+            new_employee.incompatible_employees.append(kid)
             db.session.flush()
 
     if compatible_employees:
@@ -55,6 +55,7 @@ def add_employee():
 def get_employees():
     all_employees = Employee.query.all()
     result = employees_schema.dump(all_employees)
+
     return jsonify(result)
 
 
@@ -62,6 +63,7 @@ def get_employees():
 @employee_controller.route('/employee/<id>', methods=['GET'])
 def get_employee(id):
     employee = Employee.query.get(id)
+
     return employee_schema.dump(employee)
 
 
@@ -84,7 +86,7 @@ def update_employee(id):
         db.session.flush()
         for kid_id in compatible_kids:
             kid = Kid.query.get(kid_id)
-            kid.compatible_employees.append(employee)
+            employee.compatible_kids.append(kid)
             db.session.flush()
     elif compatible_kids is None:
         employee.compatible_kids = []
@@ -95,7 +97,7 @@ def update_employee(id):
         db.session.flush()
         for kid_id in incompatible_kids:
             kid = Kid.query.get(kid_id)
-            kid.incompatible_employees.append(employee)
+            employee.incompatible_kids.append(kid)
             db.session.flush()
     elif incompatible_kids is None:
         employee.incompatible_kids = []

@@ -11,11 +11,10 @@ employee_info_controller = Blueprint('employee_info_controller', __name__)
 @employee_info_controller.route('/employee_info', methods=['POST'])
 def add_employee_info():
     employee_id = request.json['employee_id']
-    comments = request.json['comments']
     attendance = request.json['attendance']
     agenda_id = request.json['agenda_id']
 
-    new_employee_info = EmployeeInfo(employee_id, comments, attendance, agenda_id)
+    new_employee_info = EmployeeInfo(employee_id, attendance, agenda_id)
 
     db.session.add(new_employee_info)
     db.session.commit()
@@ -28,6 +27,7 @@ def add_employee_info():
 def get_employee_infos():
     all_employee_infos = EmployeeInfo.query.all()
     result = employees_infos_schema.dump(all_employee_infos)
+
     return jsonify(result)
 
 
@@ -35,6 +35,7 @@ def get_employee_infos():
 @employee_info_controller.route('/employee_info/<id>', methods=['GET'])
 def get_employee_info(id):
     employee_info = EmployeeInfo.query.get(id)
+
     return employee_info_schema.dump(employee_info)
 
 
@@ -43,11 +44,10 @@ def get_employee_info(id):
 def update_employee_info(id):
     employee_info = EmployeeInfo.query.get(id)
 
-    comments = request.json['comments']
     attendance = request.json['attendance']
 
-    employee_info.comments = comments
-    employee_info.attendance = attendance
+    if attendance:
+        employee_info.attendance = attendance
 
     db.session.commit()
 

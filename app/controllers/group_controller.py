@@ -45,8 +45,10 @@ def update_group(id):
     title = request.json['title']
     color = request.json['color']
 
-    group.title = title
-    group.color = color
+    if title:
+        group.title = title
+    if color:
+        group.color = color
 
     db.session.commit()
 

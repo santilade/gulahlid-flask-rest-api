@@ -32,6 +32,7 @@ def add_agenda():
 def get_agendas():
     all_agendas = Agenda.query.all()
     result = agendas_schema.dump(all_agendas)
+
     return jsonify(result)
 
 
@@ -39,6 +40,7 @@ def get_agendas():
 @agenda_controller.route('/agenda/<id>', methods=['GET'])
 def get_agenda(id):
     agenda = Agenda.query.get(id)
+
     return agenda_schema.dump(agenda)
 
 
@@ -48,16 +50,17 @@ def update_agenda(id):
     agenda = Agenda.query.get(id)
 
     title = request.json['title']
+    employees_infos = request.json['employees_infos']
+    kids_infos = request.json['kids_infos']
+
     if title != "":
         agenda.title = title
 
-    employees_infos = request.json['employees_infos']
     if employees_infos:
         for employee_info in employees_infos:
             response = requests.post(API_BASE_URL + '/employee_info', json=employee_info)
             print(response.text)
 
-    kids_infos = request.json['kids_infos']
     if kids_infos:
         for kid_info in kids_infos:
             response = requests.post(API_BASE_URL + '/kid_info', json=kid_info)

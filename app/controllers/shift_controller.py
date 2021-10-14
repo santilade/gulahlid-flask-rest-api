@@ -12,6 +12,7 @@ shift_controller = Blueprint('shift_controller', __name__)
 def get_shifts():
     all_shifts = Shift.query.all()
     result = shifts_schema.dump(all_shifts)
+
     return jsonify(result)
 
 
@@ -19,6 +20,7 @@ def get_shifts():
 @shift_controller.route('/shift/<id>', methods=['GET'])
 def get_shift(id):
     shift = Shift.query.get(id)
+
     return shift_schema.dump(shift)
 
 
@@ -30,8 +32,10 @@ def update_shift(id):
     employee_id = request.json['employee_id']
     kid_id = request.json['kid_id']
 
-    shift.employee_id = employee_id
-    shift.kid_id = kid_id
+    if employee_id:
+        shift.employee_id = employee_id
+    if kid_id:
+        shift.kid_id = kid_id
 
     db.session.commit()
 

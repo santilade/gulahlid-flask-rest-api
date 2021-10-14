@@ -103,13 +103,11 @@ class Employee(db.Model):
 class EmployeeInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
-    comments = db.Column(db.String(1000))
     attendance = db.Column(db.JSON)
     agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
 
-    def __init__(self, employee_id, comments, attendance, agenda_id):
+    def __init__(self, employee_id, attendance, agenda_id):
         self.employee_id = employee_id
-        self.comments = comments
         self.attendance = attendance
         self.agenda_id = agenda_id
 
@@ -120,10 +118,14 @@ class Kid(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     grade = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
-    compatible_employees = db.relationship("Employee", secondary=employee_kid_compatible,
+
+    compatible_employees = db.relationship("Employee",
+                                           secondary=employee_kid_compatible,
                                            back_populates="compatible_kids")
-    incompatible_employees = db.relationship("Employee", secondary=employee_kid_incompatible,
+    incompatible_employees = db.relationship("Employee",
+                                             secondary=employee_kid_incompatible,
                                              back_populates="incompatible_kids")
+
     kid_infos = db.relationship('KidInfo', backref='kid', lazy=True)
     shifts = db.relationship('Shift', backref='kid', lazy=True)
 
@@ -141,29 +143,14 @@ class Kid(db.Model):
 class KidInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
-    important = db.Column(db.String(100))
-    arrival_time = db.Column(db.String(100), nullable=False)
-    departure_time = db.Column(db.String(100), nullable=False)
-    medication_time = db.Column(db.String(100))
-    transport = db.Column(db.String(100), nullable=False)
-    wheelchair = db.Column(db.Boolean, nullable=False)
     difficulty = db.Column(db.String(100), nullable=False)
     employees_needed = db.Column(db.Integer, nullable=False)
-    other_info = db.Column(db.String(1000))
     attendance = db.Column(db.JSON)
     agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
 
-    def __init__(self, kid_id, important, arrival_time, departure_time, medication_time, transport, wheelchair,
-                 difficulty, employees_needed, other_info, attendance, agenda_id):
+    def __init__(self, kid_id, difficulty, employees_needed, attendance, agenda_id):
         self.kid_id = kid_id
-        self.important = important
-        self.arrival_time = arrival_time
-        self.departure_time = departure_time
-        self.medication_time = medication_time
-        self.transport = transport
-        self.wheelchair = wheelchair
         self.difficulty = difficulty
         self.employees_needed = employees_needed
-        self.other_info = other_info
         self.attendance = attendance
         self.agenda_id = agenda_id
