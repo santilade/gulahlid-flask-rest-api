@@ -14,10 +14,12 @@ def add_employee():
     compatible_kids = []
     incompatible_kids = []
     compatible_employees = []
+    incompatible_employees = []
     employee_infos = []
     shifts = []
 
-    new_employee = Employee(name, compatible_kids, incompatible_kids, compatible_employees, employee_infos, shifts)
+    new_employee = Employee(name, compatible_kids, incompatible_kids, compatible_employees, incompatible_employees,
+                            employee_infos, shifts)
 
     db.session.add(new_employee)
     db.session.flush()
@@ -25,17 +27,18 @@ def add_employee():
     compatible_kids = request.json['compatible_kids']
     incompatible_kids = request.json['incompatible_kids']
     compatible_employees = request.json['compatible_employees']
+    incompatible_employees = request.json['incompatible_employees']
 
     if compatible_kids:
         for kid_id in compatible_kids:
             kid = Kid.query.get(kid_id)
-            new_employee.compatible_employees.append(kid)
+            new_employee.compatible_kids.append(kid)
             db.session.flush()
 
     if incompatible_kids:
         for kid_id in incompatible_kids:
             kid = Kid.query.get(kid_id)
-            new_employee.incompatible_employees.append(kid)
+            new_employee.incompatible_kids.append(kid)
             db.session.flush()
 
     if compatible_employees:
@@ -43,6 +46,13 @@ def add_employee():
             compatible_employee = Employee.query.get(employee_id)
             new_employee.compatible_employees.append(compatible_employee)
             compatible_employee.compatible_employees.append(new_employee)
+            db.session.flush()
+
+    if incompatible_employees:
+        for employee_id in incompatible_employees:
+            incompatible_employee = Employee.query.get(employee_id)
+            new_employee.incompatible_employees.append(incompatible_employee)
+            incompatible_employee.incompatible_employees.append(new_employee)
             db.session.flush()
 
     db.session.commit()
@@ -76,6 +86,7 @@ def update_employee(id):
     compatible_kids = request.json['compatible_kids']
     incompatible_kids = request.json['incompatible_kids']
     compatible_employees = request.json['compatible_employees']
+    incompatible_employees = request.json['incompatible_employees']
 
     if name != "":
         employee.name = name
@@ -121,6 +132,24 @@ def update_employee(id):
         employee.compatible_employees = []
         db.session.flush()
 
+    if incompatible_employees:
+        for old_incompatible_employee in employee.incompatible_employees:
+            old_incompatible_employee.incompatible_employees.remove(employee)
+            db.session.flush()
+        employee.incompatible_employees = []
+        db.session.flush()
+        for employee_id in incompatible_employees:
+            incompatible_employee = Employee.query.get(employee_id)
+            employee.incompatible_employees.append(incompatible_employee)
+            incompatible_employee.incompatible_employees.append(employee)
+            db.session.flush()
+    elif incompatible_employees is None:
+        for old_incompatible_employee in employee.incompatible_employees:
+            old_incompatible_employee.incompatible_employees.remove(employee)
+            db.session.flush()
+        employee.incompatible_employees = []
+        db.session.flush()
+
     db.session.commit()
 
     return employee_schema.dump(employee)
@@ -134,6 +163,7 @@ def delete_employee(id):
     compatible_kids = employee.compatible_kids
     incompatible_kids = employee.incompatible_kids
     compatible_employees = employee.compatible_employees
+    incompatible_employees = employee.incompatible_employees
     employee_infos = employee.employee_infos
     shifts = employee.shifts
 
@@ -148,6 +178,10 @@ def delete_employee(id):
 
     for compatible_employee in compatible_employees:
         compatible_employee.compatible_employees.remove(employee)
+        db.session.flush()
+
+    for incompatible_employee in incompatible_employees:
+        incompatible_employee.incompatible_employees.remove(employee)
         db.session.flush()
 
     for employee_info in employee_infos:

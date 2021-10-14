@@ -1,5 +1,6 @@
 from app import db
 
+# Employee / Kid
 employee_kid_compatible = db.Table('employee_kid_compatible',
                                    db.Column('kid_id', db.Integer, db.ForeignKey('kid.id')),
                                    db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'))
@@ -9,10 +10,24 @@ employee_kid_incompatible = db.Table('employee_kid_incompatible',
                                      db.Column('kid_id', db.Integer, db.ForeignKey('kid.id')),
                                      db.Column('employee_id', db.Integer, db.ForeignKey('employee.id'))
                                      )
+# Employee / Employee
 employee_employee_compatible = db.Table('employee_employee_compatible',
                                         db.Column('compatible_id', db.Integer, db.ForeignKey('employee.id')),
                                         db.Column('self_id', db.Integer, db.ForeignKey('employee.id'))
                                         )
+employee_employee_incompatible = db.Table('employee_employee_incompatible',
+                                          db.Column('incompatible_id', db.Integer, db.ForeignKey('employee.id')),
+                                          db.Column('self_id', db.Integer, db.ForeignKey('employee.id'))
+                                          )
+# Kid / Kid
+kid_kid_compatible = db.Table('kid_kid_compatible',
+                              db.Column('compatible_id', db.Integer, db.ForeignKey('kid.id')),
+                              db.Column('self_id', db.Integer, db.ForeignKey('kid.id'))
+                              )
+kid_kid_incompatible = db.Table('kid_kid_incompatible',
+                                db.Column('incompatible_id', db.Integer, db.ForeignKey('kid.id')),
+                                db.Column('self_id', db.Integer, db.ForeignKey('kid.id'))
+                                )
 
 
 # Agenda Model
@@ -86,15 +101,23 @@ class Employee(db.Model):
                                            secondaryjoin=(employee_employee_compatible.c.self_id == id),
                                            back_populates="compatible_employees",
                                            lazy='dynamic')
+    incompatible_employees = db.relationship('Employee',
+                                             secondary=employee_employee_incompatible,
+                                             primaryjoin=(employee_employee_incompatible.c.incompatible_id == id),
+                                             secondaryjoin=(employee_employee_incompatible.c.self_id == id),
+                                             back_populates="incompatible_employees",
+                                             lazy='dynamic')
 
     employee_infos = db.relationship('EmployeeInfo', backref='employee', lazy=True)
     shifts = db.relationship('Shift', backref='employee', lazy=True)
 
-    def __init__(self, name, compatible_kids, incompatible_kids, compatible_employees, employee_infos, shifts):
+    def __init__(self, name, compatible_kids, incompatible_kids, compatible_employees, incompatible_employees,
+                 employee_infos, shifts):
         self.name = name
         self.compatible_kids = compatible_kids
         self.incompatible_kids = incompatible_kids
         self.compatible_employees = compatible_employees
+        self.incompatible_employees = incompatible_employees
         self.employee_infos = employee_infos
         self.shifts = shifts
 
@@ -125,16 +148,31 @@ class Kid(db.Model):
     incompatible_employees = db.relationship("Employee",
                                              secondary=employee_kid_incompatible,
                                              back_populates="incompatible_kids")
+    compatible_kids = db.relationship('Kid',
+                                      secondary=kid_kid_compatible,
+                                      primaryjoin=(kid_kid_compatible.c.compatible_id == id),
+                                      secondaryjoin=(kid_kid_compatible.c.self_id == id),
+                                      back_populates="compatible_kids",
+                                      lazy='dynamic')
+    incompatible_kids = db.relationship('Kid',
+                                        secondary=kid_kid_incompatible,
+                                        primaryjoin=(kid_kid_incompatible.c.incompatible_id == id),
+                                        secondaryjoin=(kid_kid_incompatible.c.self_id == id),
+                                        back_populates="incompatible_kids",
+                                        lazy='dynamic')
 
     kid_infos = db.relationship('KidInfo', backref='kid', lazy=True)
     shifts = db.relationship('Shift', backref='kid', lazy=True)
 
-    def __init__(self, name, grade, group_id, compatible_employees, incompatible_employees, kid_infos, shifts):
+    def __init__(self, name, grade, group_id, compatible_employees, incompatible_employees, compatible_kids,
+                 incompatible_kids, kid_infos, shifts):
         self.name = name
         self.grade = grade
         self.group_id = group_id
         self.compatible_employees = compatible_employees
         self.incompatible_employees = incompatible_employees
+        self.compatible_kids = compatible_kids
+        self.incompatible_kids = incompatible_kids
         self.kid_infos = kid_infos
         self.shifts = shifts
 

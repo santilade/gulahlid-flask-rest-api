@@ -56,6 +56,7 @@ class EmployeeSchema(SQLAlchemySchema):
     compatible_kids = auto_field()
     incompatible_kids = auto_field()
     compatible_employees = auto_field()
+    incompatible_employees = auto_field()
     employee_infos = auto_field()
     shifts = auto_field()
 
@@ -84,6 +85,8 @@ class KidSchema(SQLAlchemySchema):
     group_id = auto_field()
     compatible_employees = auto_field()
     incompatible_employees = auto_field()
+    compatible_kids = auto_field()
+    incompatible_kids = auto_field()
     kid_infos = auto_field()
     shifts = auto_field()
 
