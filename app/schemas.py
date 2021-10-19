@@ -1,11 +1,11 @@
 from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field
-from .models import Agenda, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
+from .models import Calendar, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
 
 
-# Agenda Schema
-class AgendaSchema(SQLAlchemySchema):
+# Calendar Schema
+class CalendarSchema(SQLAlchemySchema):
     class Meta:
-        model = Agenda
+        model = Calendar
         load_instance = True
 
     id = auto_field()
@@ -25,7 +25,7 @@ class ShiftSchema(SQLAlchemySchema):
         load_instance = True
 
     id = auto_field()
-    agenda_id = auto_field()
+    calendar_id = auto_field()
     rotation = auto_field()
     weekday = auto_field()
     shift = auto_field()
@@ -70,7 +70,7 @@ class EmployeeInfoSchema(SQLAlchemySchema):
     id = auto_field()
     employee_id = auto_field()
     attendance = auto_field()
-    agenda_id = auto_field()
+    calendar_id = auto_field()
 
 
 # Kid Schema
@@ -102,12 +102,12 @@ class KidInfoSchema(SQLAlchemySchema):
     difficulty = auto_field()
     employees_needed = auto_field()
     attendance = auto_field()
-    agenda_id = auto_field()
+    calendar_id = auto_field()
 
 
 # Init schemas
-agenda_schema = AgendaSchema()
-agendas_schema = AgendaSchema(many=True)
+calendar_schema = CalendarSchema()
+calendars_schema = CalendarSchema(many=True)
 
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)

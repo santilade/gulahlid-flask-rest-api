@@ -12,9 +12,9 @@ employee_info_controller = Blueprint('employee_info_controller', __name__)
 def add_employee_info():
     employee_id = request.json['employee_id']
     attendance = request.json['attendance']
-    agenda_id = request.json['agenda_id']
+    calendar_id = request.json['calendar_id']
 
-    new_employee_info = EmployeeInfo(employee_id, attendance, agenda_id)
+    new_employee_info = EmployeeInfo(employee_id, attendance, calendar_id)
 
     db.session.add(new_employee_info)
     db.session.commit()

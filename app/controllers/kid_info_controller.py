@@ -14,9 +14,9 @@ def add_kid_info():
     difficulty = request.json['difficulty']
     employees_needed = request.json['employees_needed']
     attendance = request.json['attendance']
-    agenda_id = request.json['agenda_id']
+    calendar_id = request.json['calendar_id']
 
-    new_kid_info = KidInfo(kid_id, difficulty, employees_needed, attendance, agenda_id)
+    new_kid_info = KidInfo(kid_id, difficulty, employees_needed, attendance, calendar_id)
 
     db.session.add(new_kid_info)
     db.session.commit()

@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from . import API_BASE_URL
-from .models import Agenda, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
-from .schemas import agenda_schema, agendas_schema, shift_schema, shifts_schema, group_schema, groups_schema, \
+from .models import Calendar, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
+from .schemas import calendar_schema, calendars_schema, shift_schema, shifts_schema, group_schema, groups_schema, \
     employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, kids_schema, \
     kid_info_schema, kids_infos_schema
 import requests
@@ -14,9 +14,9 @@ generator = Blueprint('generator', __name__)
 # ///////////////// GENERATOR /////////////////
 
 
-class AgendaGenerator:
-    def __init__(self, agenda_id):
-        self.agenda = Agenda.query.get(agenda_id)
+class CalendarGenerator:
+    def __init__(self, calendar_id):
+        self.calendar = Calendar.query.get(calendar_id)
         self.employees_infos = []  # [EmployeeInfo, EmployeeInfo, EmployeeInfo, ...]
         self.kids_infos = []  # [KidInfo, KidInfo, KidInfo, ...]
         self.unassigned_shifts = {}  # {day 1: [Shift, Shift, Shift, ...]}
@@ -41,11 +41,11 @@ class AgendaGenerator:
         return response
 
     def get_infos(self):
-        filtered_employees_infos = EmployeeInfo.query.filter_by(agenda_id=self.agenda.id)
+        filtered_employees_infos = EmployeeInfo.query.filter_by(calendar_id=self.calendar.id)
         for employee_info in filtered_employees_infos:
             self.employees_infos.append(employee_info)
 
-        filtered_kids_infos = KidInfo.query.filter_by(agenda_id=self.agenda.id)
+        filtered_kids_infos = KidInfo.query.filter_by(calendar_id=self.calendar.id)
         for kid_info in filtered_kids_infos:
             self.kids_infos.append(kid_info)
 
@@ -53,20 +53,20 @@ class AgendaGenerator:
 
     def set_unassigned_shifts(self):
         # DAILY ROTATIONS
-        if self.agenda.rotation_interval == 'daily rotations':
-            for rotation in range(1, self.agenda.total_rotations + 1):
+        if self.calendar.rotation_interval == 'daily rotations':
+            for rotation in range(1, self.calendar.total_rotations + 1):
                 day = "day " + str(rotation)
                 self.unassigned_shifts[day] = {}
                 self.serialized_unassigned_shifts[day] = {}
 
                 # part-time
-                if self.agenda.workday == 'part-time':
+                if self.calendar.workday == 'part-time':
                     self.unassigned_shifts[day]["afternoon"] = []
                     self.serialized_unassigned_shifts[day]["afternoon"] = []
 
                     for kid_info in self.kids_infos:
                         if kid_info.attendance[day]["afternoon"]:
-                            new_shift = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
+                            new_shift = Shift(self.calendar.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
                             db.session.add(new_shift)
 
                             self.unassigned_shifts[day]["afternoon"].append(new_shift)
@@ -77,7 +77,7 @@ class AgendaGenerator:
                         shifts_schema.dump(self.unassigned_shifts[day]["afternoon"])
 
                 # full-time
-                elif self.agenda.workday == 'full-time':
+                elif self.calendar.workday == 'full-time':
                     self.unassigned_shifts[day]["morning"] = []
                     self.unassigned_shifts[day]["afternoon"] = []
                     self.serialized_unassigned_shifts[day]["morning"] = []
@@ -85,12 +85,12 @@ class AgendaGenerator:
 
                     for kid_info in self.kids_infos:
                         if kid_info.attendance[day]["morning"]:
-                            new_morning_shift = Shift(self.agenda.id, rotation, 0, "morning", 0, kid_info.kid_id)
+                            new_morning_shift = Shift(self.calendar.id, rotation, 0, "morning", 0, kid_info.kid_id)
                             db.session.add(new_morning_shift)
                             self.unassigned_shifts[day]["morning"].append(new_morning_shift)
 
                         if kid_info.attendance[day]["afternoon"]:
-                            new_afternoon_shift = Shift(self.agenda.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
+                            new_afternoon_shift = Shift(self.calendar.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
                             db.session.add(new_afternoon_shift)
                             self.unassigned_shifts[day]["afternoon"].append(new_afternoon_shift)
 
@@ -102,8 +102,8 @@ class AgendaGenerator:
                         shifts_schema.dump(self.unassigned_shifts[day]["afternoon"])
 
         # WEEKLY ROTATIONS
-        elif self.agenda.rotation_interval == 'weekly rotations':
-            for rotation in range(1, self.agenda.total_rotations + 1):
+        elif self.calendar.rotation_interval == 'weekly rotations':
+            for rotation in range(1, self.calendar.total_rotations + 1):
                 week = "week " + str(rotation)
                 self.unassigned_shifts[week] = {}
                 self.serialized_unassigned_shifts[week] = {}
@@ -114,13 +114,13 @@ class AgendaGenerator:
                     self.serialized_unassigned_shifts[week][day] = {}
 
                     # part-time
-                    if self.agenda.workday == 'part-time':
+                    if self.calendar.workday == 'part-time':
                         self.unassigned_shifts[week][day]["afternoon"] = []
                         self.serialized_unassigned_shifts[week][day]["afternoon"] = []
 
                         for kid_info in self.kids_infos:
                             if kid_info.attendance[week][day]["afternoon"]:
-                                new_shift = Shift(self.agenda.id, rotation, weekday, "afternoon", 0, kid_info.kid_id)
+                                new_shift = Shift(self.calendar.id, rotation, weekday, "afternoon", 0, kid_info.kid_id)
                                 db.session.add(new_shift)
 
                                 self.unassigned_shifts[week][day]["afternoon"].append(new_shift)
@@ -131,7 +131,7 @@ class AgendaGenerator:
                             shifts_schema.dump(self.unassigned_shifts[week][day]["afternoon"])
 
                     # full-time
-                    elif self.agenda.workday == 'full-time':
+                    elif self.calendar.workday == 'full-time':
                         self.unassigned_shifts[week][day]["morning"] = []
                         self.unassigned_shifts[week][day]["afternoon"] = []
                         self.serialized_unassigned_shifts[week][day]["morning"] = []
@@ -139,13 +139,13 @@ class AgendaGenerator:
 
                         for kid_info in self.kids_infos:
                             if kid_info.attendance[week][day]["morning"]:
-                                new_morning_shift = Shift(self.agenda.id, rotation, weekday,"morning", 0,
+                                new_morning_shift = Shift(self.calendar.id, rotation, weekday,"morning", 0,
                                                           kid_info.kid_id)
                                 db.session.add(new_morning_shift)
                                 self.unassigned_shifts[week][day]["morning"].append(new_morning_shift)
 
                             if kid_info.attendance[week][day]["afternoon"]:
-                                new_afternoon_shift = Shift(self.agenda.id, rotation, weekday, "afternoon", 0,
+                                new_afternoon_shift = Shift(self.calendar.id, rotation, weekday, "afternoon", 0,
                                                             kid_info.kid_id)
                                 db.session.add(new_afternoon_shift)
                                 self.unassigned_shifts[week][day]["afternoon"].append(new_afternoon_shift)
@@ -170,10 +170,9 @@ class AgendaGenerator:
 
 # ///////////////// RUN GENERATOR /////////////////
 
-# Create Agenda
 @generator.route('/generator', methods=['POST'])
 def run_generator():
-    agenda_id = request.json['agenda_id']
-    new_generator = AgendaGenerator(agenda_id)
+    calendar_id = request.json['calendar_id']
+    new_generator = CalendarGenerator(calendar_id)
     response = new_generator.run()
     return jsonify(response)

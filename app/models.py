@@ -30,16 +30,16 @@ kid_kid_incompatible = db.Table('kid_kid_incompatible',
                                 )
 
 
-# Agenda Model
-class Agenda(db.Model):
+# Calendar Model
+class Calendar(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), unique=True, nullable=False)
     workday = db.Column(db.String(100), nullable=False)  # part-time / full-time
     rotation_interval = db.Column(db.String(100), nullable=False)  # daily rotations / weekly rotations
     total_rotations = db.Column(db.Integer, nullable=False)
-    kids_infos = db.relationship('KidInfo', backref='agenda', lazy=True)
-    employees_infos = db.relationship('EmployeeInfo', backref='agenda', lazy=True)
-    shifts = db.relationship('Shift', backref='agenda', lazy=True)
+    kids_infos = db.relationship('KidInfo', backref='calendar', lazy=True)
+    employees_infos = db.relationship('EmployeeInfo', backref='calendar', lazy=True)
+    shifts = db.relationship('Shift', backref='calendar', lazy=True)
 
     def __init__(self, title, workday, rotation_interval, total_rotations, kid_infos, employees_infos, shifts):
         self.title = title
@@ -54,16 +54,16 @@ class Agenda(db.Model):
 # Shift Model
 class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
+    calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
     rotation = db.Column(db.Integer, nullable=False)
-    weekday = db.Column(db.Integer)  # when relational agenda.rotation_interval is "weekly rotations" a number from
+    weekday = db.Column(db.Integer)  # when relational calendar.rotation_interval is "weekly rotations" a number from
     #                                  1 to 5 will be the weekday / 0 for "daily rotations"
     shift = db.Column(db.String(100), nullable=False)  # morning / afternoon
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
 
-    def __init__(self, agenda_id, rotation, weekday, shift, employee_id, kid_id):
-        self.agenda_id = agenda_id
+    def __init__(self, calendar_id, rotation, weekday, shift, employee_id, kid_id):
+        self.calendar_id = calendar_id
         self.rotation = rotation
         self.weekday = weekday
         self.shift = shift
@@ -127,12 +127,12 @@ class EmployeeInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     attendance = db.Column(db.JSON)
-    agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
+    calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
 
-    def __init__(self, employee_id, attendance, agenda_id):
+    def __init__(self, employee_id, attendance, calendar_id):
         self.employee_id = employee_id
         self.attendance = attendance
-        self.agenda_id = agenda_id
+        self.calendar_id = calendar_id
 
 
 # Kid Model
@@ -184,11 +184,11 @@ class KidInfo(db.Model):
     difficulty = db.Column(db.String(100), nullable=False)
     employees_needed = db.Column(db.Integer, nullable=False)
     attendance = db.Column(db.JSON)
-    agenda_id = db.Column(db.Integer, db.ForeignKey('agenda.id'))
+    calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
 
-    def __init__(self, kid_id, difficulty, employees_needed, attendance, agenda_id):
+    def __init__(self, kid_id, difficulty, employees_needed, attendance, calendar_id):
         self.kid_id = kid_id
         self.difficulty = difficulty
         self.employees_needed = employees_needed
         self.attendance = attendance
-        self.agenda_id = agenda_id
+        self.calendar_id = calendar_id
