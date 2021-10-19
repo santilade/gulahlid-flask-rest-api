@@ -72,7 +72,16 @@ class CalendarGenerator:
 
                     for kid_info in self.kids_infos:
                         if kid_info.attendance[day]["afternoon"]:
-                            new_shift = Shift(self.calendar.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
+                            shift_priority = 1
+                            if kid_info.closed_circle:
+                                shift_priority = shift_priority + 1
+                            if kid_info.difficulty == "challenging":
+                                shift_priority = shift_priority + 1
+                            if kid_info.employees_needed > 1:
+                                shift_priority = shift_priority + 1
+
+                            new_shift = Shift(self.calendar.id, rotation, 0, "afternoon", shift_priority, 0,
+                                              kid_info.kid_id)
                             db.session.add(new_shift)
 
                             self.unassigned_shifts[day]["afternoon"].append(new_shift)
@@ -91,12 +100,30 @@ class CalendarGenerator:
 
                     for kid_info in self.kids_infos:
                         if kid_info.attendance[day]["morning"]:
-                            new_morning_shift = Shift(self.calendar.id, rotation, 0, "morning", 0, kid_info.kid_id)
+                            shift_priority = 1
+                            if kid_info.closed_circle:
+                                shift_priority = shift_priority + 1
+                            if kid_info.difficulty == "challenging":
+                                shift_priority = shift_priority + 1
+                            if kid_info.employees_needed > 1:
+                                shift_priority = shift_priority + 1
+
+                            new_morning_shift = Shift(self.calendar.id, rotation, 0, "morning", shift_priority, 0,
+                                                      kid_info.kid_id)
                             db.session.add(new_morning_shift)
                             self.unassigned_shifts[day]["morning"].append(new_morning_shift)
 
                         if kid_info.attendance[day]["afternoon"]:
-                            new_afternoon_shift = Shift(self.calendar.id, rotation, 0, "afternoon", 0, kid_info.kid_id)
+                            shift_priority = 1
+                            if kid_info.closed_circle:
+                                shift_priority = shift_priority + 1
+                            if kid_info.difficulty == "challenging":
+                                shift_priority = shift_priority + 1
+                            if kid_info.employees_needed > 1:
+                                shift_priority = shift_priority + 1
+
+                            new_afternoon_shift = Shift(self.calendar.id, rotation, 0, "afternoon", shift_priority, 0,
+                                                        kid_info.kid_id)
                             db.session.add(new_afternoon_shift)
                             self.unassigned_shifts[day]["afternoon"].append(new_afternoon_shift)
 
@@ -126,7 +153,16 @@ class CalendarGenerator:
 
                         for kid_info in self.kids_infos:
                             if kid_info.attendance[week][day]["afternoon"]:
-                                new_shift = Shift(self.calendar.id, rotation, weekday, "afternoon", 0, kid_info.kid_id)
+                                shift_priority = 1
+                                if kid_info.closed_circle:
+                                    shift_priority = shift_priority + 1
+                                if kid_info.difficulty == "challenging":
+                                    shift_priority = shift_priority + 1
+                                if kid_info.employees_needed > 1:
+                                    shift_priority = shift_priority + 1
+
+                                new_shift = Shift(self.calendar.id, rotation, 0, "afternoon", shift_priority, 0,
+                                                  kid_info.kid_id)
                                 db.session.add(new_shift)
 
                                 self.unassigned_shifts[week][day]["afternoon"].append(new_shift)
@@ -145,13 +181,30 @@ class CalendarGenerator:
 
                         for kid_info in self.kids_infos:
                             if kid_info.attendance[week][day]["morning"]:
-                                new_morning_shift = Shift(self.calendar.id, rotation, weekday, "morning", 0,
+                                shift_priority = 1
+                                if kid_info.closed_circle:
+                                    shift_priority = shift_priority + 1
+                                if kid_info.difficulty == "challenging":
+                                    shift_priority = shift_priority + 1
+                                if kid_info.employees_needed > 1:
+                                    shift_priority = shift_priority + 1
+
+                                new_morning_shift = Shift(self.calendar.id, rotation, 0, "morning", shift_priority, 0,
                                                           kid_info.kid_id)
                                 db.session.add(new_morning_shift)
                                 self.unassigned_shifts[week][day]["morning"].append(new_morning_shift)
 
                             if kid_info.attendance[week][day]["afternoon"]:
-                                new_afternoon_shift = Shift(self.calendar.id, rotation, weekday, "afternoon", 0,
+                                shift_priority = 1
+                                if kid_info.closed_circle:
+                                    shift_priority = shift_priority + 1
+                                if kid_info.difficulty == "challenging":
+                                    shift_priority = shift_priority + 1
+                                if kid_info.employees_needed > 1:
+                                    shift_priority = shift_priority + 1
+
+                                new_afternoon_shift = Shift(self.calendar.id, rotation, 0, "afternoon", shift_priority,
+                                                            0,
                                                             kid_info.kid_id)
                                 db.session.add(new_afternoon_shift)
                                 self.unassigned_shifts[week][day]["afternoon"].append(new_afternoon_shift)
@@ -255,9 +308,9 @@ class CalendarGenerator:
 
         return "DONE!"
 
-    # def calc_employees_accumulated_workload(self):
+    # def
 
-    # def set_kids_closed_circles(self):
+    # def calc_employees_accumulated_workload(self):
 
     # def assign_shifts(self):
 

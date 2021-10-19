@@ -29,6 +29,7 @@ class ShiftSchema(SQLAlchemySchema):
     rotation = auto_field()
     weekday = auto_field()
     shift = auto_field()
+    priority = auto_field()
     employee_id = auto_field()
     kid_id = auto_field()
 
@@ -99,6 +100,7 @@ class KidInfoSchema(SQLAlchemySchema):
 
     id = auto_field()
     kid_id = auto_field()
+    closed_circle = auto_field()
     difficulty = auto_field()
     employees_needed = auto_field()
     attendance = auto_field()
