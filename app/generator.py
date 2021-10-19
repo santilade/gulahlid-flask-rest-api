@@ -22,6 +22,7 @@ class CalendarGenerator:
         self.unassigned_shifts = {}  # {day 1: [Shift, Shift, Shift, ...]}
         self.serialized_unassigned_shifts = {}
         self.free_employees = {}  # {"week 1": {"Monday": [Employee, Employee, ...],"Tuesday": [], ...}, "week 2": ...}
+        self.serialized_free_employees = {}
         self.employees_accumulated_workload = {}  # {employee id (int): accumulated workload (int), ...}
         self.closed_circles = {}  # {kid id: [Employee, Employee, ...], kid id: [Employee, Employee, ...]}
 
@@ -36,6 +37,11 @@ class CalendarGenerator:
             "set_unassigned_shifts()": {
                 "Status": self.set_unassigned_shifts(),
                 "unassigned_shifts": self.serialized_unassigned_shifts
+            },
+
+            "set_free_employees()": {
+                "Status": self.set_free_employees(),
+                "unassigned_shifts": self.serialized_free_employees
             }
         }
         return response
@@ -139,7 +145,7 @@ class CalendarGenerator:
 
                         for kid_info in self.kids_infos:
                             if kid_info.attendance[week][day]["morning"]:
-                                new_morning_shift = Shift(self.calendar.id, rotation, weekday,"morning", 0,
+                                new_morning_shift = Shift(self.calendar.id, rotation, weekday, "morning", 0,
                                                           kid_info.kid_id)
                                 db.session.add(new_morning_shift)
                                 self.unassigned_shifts[week][day]["morning"].append(new_morning_shift)
@@ -159,7 +165,95 @@ class CalendarGenerator:
 
         return "DONE!"
 
-    # def set_free_employees(self):
+    def set_free_employees(self):
+        # DAILY ROTATIONS
+        if self.calendar.rotation_interval == 'daily rotations':
+            for rotation in range(1, self.calendar.total_rotations + 1):
+                day = "day " + str(rotation)
+                self.free_employees[day] = {}
+                self.serialized_free_employees[day] = {}
+
+                # part-time
+                if self.calendar.workday == 'part-time':
+                    self.free_employees[day]["afternoon"] = []
+                    self.serialized_free_employees[day]["afternoon"] = []
+
+                    for employee_info in self.employees_infos:
+                        if employee_info.attendance[day]["afternoon"]:
+                            employee = Employee.query.get(employee_info.employee_id)
+                            self.free_employees[day]["afternoon"].append(employee)
+
+                    self.serialized_free_employees[day]["afternoon"] = \
+                        employees_schema.dump(self.free_employees[day]["afternoon"])
+
+                # full-time
+                elif self.calendar.workday == 'full-time':
+                    self.free_employees[day]["morning"] = []
+                    self.free_employees[day]["afternoon"] = []
+                    self.serialized_free_employees[day]["morning"] = []
+                    self.serialized_free_employees[day]["afternoon"] = []
+
+                    for employee_info in self.employees_infos:
+                        if employee_info.attendance[day]["morning"]:
+                            employee = Employee.query.get(employee_info.employee_id)
+                            self.free_employees[day]["morning"].append(employee)
+
+                        if employee_info.attendance[day]["afternoon"]:
+                            employee = Employee.query.get(employee_info.employee_id)
+                            self.free_employees[day]["afternoon"].append(employee)
+
+                    self.serialized_free_employees[day]["morning"] = \
+                        employees_schema.dump(self.free_employees[day]["morning"])
+                    self.serialized_free_employees[day]["afternoon"] = \
+                        employees_schema.dump(self.free_employees[day]["afternoon"])
+
+        # WEEKLY ROTATIONS
+        elif self.calendar.rotation_interval == 'weekly rotations':
+            for rotation in range(1, self.calendar.total_rotations + 1):
+                week = "week " + str(rotation)
+                self.free_employees[week] = {}
+                self.serialized_free_employees[week] = {}
+
+                for weekday in range(1, 6):
+                    day = "day " + str(weekday)
+                    self.free_employees[week][day] = {}
+                    self.serialized_free_employees[week][day] = {}
+
+                    # part-time
+                    if self.calendar.workday == 'part-time':
+                        self.free_employees[week][day]["afternoon"] = []
+                        self.serialized_free_employees[week][day]["afternoon"] = []
+
+                        for employee_info in self.employees_infos:
+                            if employee_info.attendance[week][day]["afternoon"]:
+                                employee = Employee.query.get(employee_info.employee_id)
+                                self.free_employees[week][day]["afternoon"].append(employee)
+
+                        self.serialized_free_employees[week][day]["afternoon"] = \
+                            employees_schema.dump(self.free_employees[week][day]["afternoon"])
+
+                    # full-time
+                    elif self.calendar.workday == 'full-time':
+                        self.free_employees[week][day]["morning"] = []
+                        self.free_employees[week][day]["afternoon"] = []
+                        self.serialized_free_employees[week][day]["morning"] = []
+                        self.serialized_free_employees[week][day]["afternoon"] = []
+
+                        for employee_info in self.employees_infos:
+                            if employee_info.attendance[week][day]["morning"]:
+                                employee = Employee.query.get(employee_info.employee_id)
+                                self.free_employees[week][day]["morning"].append(employee)
+
+                            if employee_info.attendance[week][day]["afternoon"]:
+                                employee = Employee.query.get(employee_info.employee_id)
+                                self.free_employees[week][day]["afternoon"].append(employee)
+
+                        self.serialized_free_employees[week][day]["morning"] = \
+                            employees_schema.dump(self.free_employees[week][day]["morning"])
+                        self.serialized_free_employees[week][day]["afternoon"] = \
+                            employees_schema.dump(self.free_employees[week][day]["afternoon"])
+
+        return "DONE!"
 
     # def calc_employees_accumulated_workload(self):
 
