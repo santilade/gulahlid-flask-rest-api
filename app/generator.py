@@ -57,7 +57,7 @@ class CalendarGenerator:
 
         return "DONE!"
 
-    def calc_shift_priority(self, kid_id):
+    def calc_shift_priority(kid_id):
         kid = Kid.query.get(kid_id)
         shift_priority = 1
         if kid.closed_circle:
