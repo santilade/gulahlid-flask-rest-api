@@ -143,6 +143,9 @@ class Kid(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     grade = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    closed_circle = db.Column(db.Boolean, nullable=False)
+    difficulty = db.Column(db.String(100), nullable=False)  # challenging / average / easy-going
+    employees_needed = db.Column(db.Integer, nullable=False)
 
     compatible_employees = db.relationship("Employee",
                                            secondary=employee_kid_compatible,
@@ -166,11 +169,14 @@ class Kid(db.Model):
     kid_infos = db.relationship('KidInfo', backref='kid', lazy=True)
     shifts = db.relationship('Shift', backref='kid', lazy=True)
 
-    def __init__(self, name, grade, group_id, compatible_employees, incompatible_employees, compatible_kids,
-                 incompatible_kids, kid_infos, shifts):
+    def __init__(self, name, grade, group_id, closed_circle, difficulty, employees_needed, compatible_employees,
+                 incompatible_employees, compatible_kids, incompatible_kids, kid_infos, shifts):
         self.name = name
         self.grade = grade
         self.group_id = group_id
+        self.closed_circle = closed_circle
+        self.difficulty = difficulty
+        self.employees_needed = employees_needed
         self.compatible_employees = compatible_employees
         self.incompatible_employees = incompatible_employees
         self.compatible_kids = compatible_kids
@@ -183,16 +189,10 @@ class Kid(db.Model):
 class KidInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
-    closed_circle = db.Column(db.Boolean, nullable=False)
-    difficulty = db.Column(db.String(100), nullable=False)  # challenging / average / easy-going
-    employees_needed = db.Column(db.Integer, nullable=False)
     attendance = db.Column(db.JSON)
     calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
 
-    def __init__(self, kid_id, closed_circle, difficulty, employees_needed, attendance, calendar_id):
+    def __init__(self, kid_id, attendance, calendar_id):
         self.kid_id = kid_id
-        self.closed_circle = closed_circle
-        self.difficulty = difficulty
-        self.employees_needed = employees_needed
         self.attendance = attendance
         self.calendar_id = calendar_id

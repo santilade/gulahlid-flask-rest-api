@@ -84,6 +84,9 @@ class KidSchema(SQLAlchemySchema):
     name = auto_field()
     grade = auto_field()
     group_id = auto_field()
+    closed_circle = auto_field()
+    difficulty = auto_field()
+    employees_needed = auto_field()
     compatible_employees = auto_field()
     incompatible_employees = auto_field()
     compatible_kids = auto_field()
@@ -100,9 +103,6 @@ class KidInfoSchema(SQLAlchemySchema):
 
     id = auto_field()
     kid_id = auto_field()
-    closed_circle = auto_field()
-    difficulty = auto_field()
-    employees_needed = auto_field()
     attendance = auto_field()
     calendar_id = auto_field()
 

@@ -13,6 +13,9 @@ def add_kid():
     name = request.json['name']
     grade = request.json['grade']
     group_id = request.json['group_id']
+    closed_circle = request.json['closed_circle']
+    difficulty = request.json['difficulty']
+    employees_needed = request.json['employees_needed']
     compatible_employees = []
     incompatible_employees = []
     compatible_kids = []
@@ -20,8 +23,8 @@ def add_kid():
     kid_infos = []
     shifts = []
 
-    new_kid = Kid(name, grade, group_id, compatible_employees, incompatible_employees, compatible_kids,
-                  incompatible_kids, kid_infos, shifts)
+    new_kid = Kid(name, grade, group_id, closed_circle, difficulty, employees_needed, compatible_employees,
+                  incompatible_employees, compatible_kids, incompatible_kids, kid_infos, shifts)
 
     db.session.add(new_kid)
     db.session.flush()
@@ -85,6 +88,9 @@ def update_kid(id):
     name = request.json['name']
     grade = request.json['grade']
     group_id = request.json['group_id']
+    closed_circle = request.json['closed_circle']
+    difficulty = request.json['difficulty']
+    employees_needed = request.json['employees_needed']
     compatible_employees = request.json['compatible_employees']
     incompatible_employees = request.json['incompatible_employees']
     compatible_kids = request.json['compatible_kids']
@@ -98,6 +104,15 @@ def update_kid(id):
         db.session.flush()
     if group_id != "":
         kid.group_id = group_id
+        db.session.flush()
+    if closed_circle != "":
+        kid.closed_circle = closed_circle
+        db.session.flush()
+    if difficulty != "":
+        kid.difficulty = difficulty
+        db.session.flush()
+    if employees_needed != "":
+        kid.employees_needed = employees_needed
         db.session.flush()
 
     if compatible_employees:
