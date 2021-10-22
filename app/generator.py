@@ -41,7 +41,7 @@ class CalendarGenerator:
 
             "set_free_employees()": {
                 "Status": self.set_free_employees(),
-                "unassigned_shifts": self.serialized_free_employees
+                "free_employees": self.serialized_free_employees
             }
         }
         return response
@@ -57,7 +57,7 @@ class CalendarGenerator:
 
         return "DONE!"
 
-    def calc_shift_priority(kid_id):
+    def calc_shift_priority(self, kid_id):
         kid = Kid.query.get(kid_id)
         shift_priority = 1
         if kid.closed_circle:

@@ -143,8 +143,8 @@ class Kid(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     grade = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
-    closed_circle = db.Column(db.Boolean, nullable=False)
     difficulty = db.Column(db.String(100), nullable=False)  # challenging / average / easy-going
+    closed_circle = db.Column(db.Boolean, nullable=False)
     employees_needed = db.Column(db.Integer, nullable=False)
 
     compatible_employees = db.relationship("Employee",
@@ -169,13 +169,13 @@ class Kid(db.Model):
     kid_infos = db.relationship('KidInfo', backref='kid', lazy=True)
     shifts = db.relationship('Shift', backref='kid', lazy=True)
 
-    def __init__(self, name, grade, group_id, closed_circle, difficulty, employees_needed, compatible_employees,
+    def __init__(self, name, grade, group_id, difficulty, closed_circle, employees_needed, compatible_employees,
                  incompatible_employees, compatible_kids, incompatible_kids, kid_infos, shifts):
         self.name = name
         self.grade = grade
         self.group_id = group_id
-        self.closed_circle = closed_circle
         self.difficulty = difficulty
+        self.closed_circle = closed_circle
         self.employees_needed = employees_needed
         self.compatible_employees = compatible_employees
         self.incompatible_employees = incompatible_employees
