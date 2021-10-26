@@ -26,9 +26,9 @@ class ShiftSchema(SQLAlchemySchema):
 
     id = auto_field()
     calendar_id = auto_field()
-    rotation = auto_field()
-    weekday = auto_field()
-    shift = auto_field()
+    week = auto_field()
+    day = auto_field()
+    time = auto_field()
     priority = auto_field()
     employee_id = auto_field()
     kid_id = auto_field()

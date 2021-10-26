@@ -42,19 +42,18 @@ class Calendar(db.Model):
 class Shift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
-    rotation = db.Column(db.Integer, nullable=False)
-    weekday = db.Column(db.Integer)  # when relational calendar.rotation_interval is "weekly rotations" a number from
-    #                                  1 to 5 will be the weekday / 0 for "daily rotations"
-    shift = db.Column(db.String(100), nullable=False)  # morning / afternoon
+    week = db.Column(db.String(100))
+    day = db.Column(db.String(100), nullable=False)
+    time = db.Column(db.String(100), nullable=False)  # morning / afternoon
     priority = db.Column(db.Integer, nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
 
-    def __init__(self, calendar_id, rotation, weekday, shift, priority, employee_id, kid_id):
+    def __init__(self, calendar_id, week, day, time, priority, employee_id, kid_id):
         self.calendar_id = calendar_id
-        self.rotation = rotation
-        self.weekday = weekday
-        self.shift = shift
+        self.week = week
+        self.day = day
+        self.time = time
         self.priority = priority
         self.employee_id = employee_id
         self.kid_id = kid_id
