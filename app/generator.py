@@ -33,7 +33,6 @@ class Generator:
                 "full-time": self.case4
             }
         }
-        self.employees_accumulated_workload = {}  # {employee id (int): accumulated workload (int), ...}
 
     def run(self):
         self.get_infos()
@@ -59,8 +58,8 @@ class Generator:
     def case1(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
             day = "day " + str(rotation)
-            self.unassigned_shifts[day] = {"afternoon": []}
-            self.serialized_unassigned_shifts[day] = {"afternoon": []}
+            self.unassigned_shifts[day] = {"afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
+            self.serialized_unassigned_shifts[day] = {"afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
             self.free_employees[day] = {"afternoon": []}
             self.serialized_free_employees[day] = {"afternoon": []}
 
@@ -75,10 +74,14 @@ class Generator:
     def case2(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
             day = "day " + str(rotation)
-            self.unassigned_shifts[day] = {"morning": [], "afternoon": []}
-            self.serialized_unassigned_shifts[day] = {"morning": [], "afternoon": []}
-            self.free_employees[day] = {"morning": [], "afternoon": []}
-            self.serialized_free_employees[day] = {"morning": [], "afternoon": []}
+            self.unassigned_shifts[day] = {"morning": {1: [], 2: [], 3: [], 4: [], 5: []},
+                                           "afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
+            self.serialized_unassigned_shifts[day] = {"morning": {1: [], 2: [], 3: [], 4: [], 5: []},
+                                                      "afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
+            self.free_employees[day] = {"morning": [],
+                                        "afternoon": []}
+            self.serialized_free_employees[day] = {"morning": [],
+                                                   "afternoon": []}
 
             for kid_info in self.kids_infos:
                 if kid_info.attendance[day]["morning"]:
@@ -102,8 +105,8 @@ class Generator:
             self.serialized_free_employees[week] = {}
             for weekday in range(1, 6):
                 day = "day " + str(weekday)
-                self.unassigned_shifts[week][day] = {"afternoon": []}
-                self.serialized_unassigned_shifts[week][day] = {"afternoon": []}
+                self.unassigned_shifts[week][day] = {"afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
+                self.serialized_unassigned_shifts[week][day] = {"afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
                 self.free_employees[week][day] = {"afternoon": []}
                 self.serialized_free_employees[week][day] = {"afternoon": []}
 
@@ -124,10 +127,14 @@ class Generator:
             self.serialized_free_employees[week] = {}
             for weekday in range(1, 6):
                 day = "day " + str(weekday)
-                self.unassigned_shifts[week][day] = {"morning": [], "afternoon": []}
-                self.serialized_unassigned_shifts[week][day] = {"morning": [], "afternoon": []}
-                self.free_employees[week][day] = {"morning": [], "afternoon": []}
-                self.serialized_free_employees[week][day] = {"morning": [], "afternoon": []}
+                self.unassigned_shifts[week][day] = {"morning": {1: [], 2: [], 3: [], 4: [], 5: []},
+                                                     "afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
+                self.serialized_unassigned_shifts[week][day] = {"morning": {1: [], 2: [], 3: [], 4: [], 5: []},
+                                                                "afternoon": {1: [], 2: [], 3: [], 4: [], 5: []}}
+                self.free_employees[week][day] = {"morning": [],
+                                                  "afternoon": []}
+                self.serialized_free_employees[week][day] = {"morning": [],
+                                                             "afternoon": []}
 
                 for kid_info in self.kids_infos:
                     if kid_info.attendance[week][day]["morning"]:
@@ -145,24 +152,24 @@ class Generator:
     def add_unassigned_shift(self, kid_id, week, day, time):
         kid = Kid.query.get(kid_id)
 
-        shift_priority = 1
+        shift_priority = 5
         if kid.closed_circle:
-            shift_priority = shift_priority + 1
+            shift_priority = shift_priority - 2
         if kid.difficulty == "challenging":
-            shift_priority = shift_priority + 1
+            shift_priority = shift_priority - 1
         if kid.employees_needed > 1:
-            shift_priority = shift_priority + 1
+            shift_priority = shift_priority - 1
 
         new_shift = Shift(self.calendar.id, week, day, time, shift_priority, 0, kid_id)
         db.session.add(new_shift)
         db.session.commit()
 
         if self.calendar.rotation_interval == 'daily rotations':
-            self.unassigned_shifts[day][time].append(new_shift)
-            self.serialized_unassigned_shifts[day][time].append(shift_schema.dump(new_shift))
+            self.unassigned_shifts[day][time][shift_priority].append(new_shift)
+            self.serialized_unassigned_shifts[day][time][shift_priority].append(shift_schema.dump(new_shift))
         elif self.calendar.rotation_interval == 'weekly rotations':
-            self.unassigned_shifts[week][day][time].append(new_shift)
-            self.serialized_unassigned_shifts[week][day][time].append(shift_schema.dump(new_shift))
+            self.unassigned_shifts[week][day][time][shift_priority].append(new_shift)
+            self.serialized_unassigned_shifts[week][day][time][shift_priority].append(shift_schema.dump(new_shift))
 
     def add_free_employee(self, employee_id, week, day, time):
         employee = Employee.query.get(employee_id)
