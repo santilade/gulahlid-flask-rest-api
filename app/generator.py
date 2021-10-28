@@ -1,11 +1,9 @@
 from flask import Blueprint, request, jsonify
 from app import db
-from . import API_BASE_URL
 from .models import Calendar, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
 from .schemas import calendar_schema, calendars_schema, shift_schema, shifts_schema, group_schema, groups_schema, \
     employee_schema, employees_schema, employee_info_schema, employees_infos_schema, kid_schema, kids_schema, \
     kid_info_schema, kids_infos_schema
-import requests
 
 # Defining as a blueprint allows to store routes in different documents or "blueprints"
 generator = Blueprint('generator', __name__)
@@ -206,8 +204,6 @@ class Generator:
             for shift in unassigned_shifts["morning"][5]:
                 # average or easy-going / 1 employees
                 return ""
-
-
 
 
 # ///////////////// RUN GENERATOR /////////////////
