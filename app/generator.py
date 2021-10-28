@@ -71,6 +71,8 @@ class Generator:
                 if employee_info.attendance[day]["afternoon"]:
                     self.add_free_employee(employee_info.employee_id, "", day, "afternoon")
 
+            self.assign_shifts(self.unassigned_shifts[day])
+
     def case2(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
             day = "day " + str(rotation)
@@ -96,6 +98,8 @@ class Generator:
                 if employee_info.attendance[day]["afternoon"]:
                     self.add_free_employee(employee_info.employee_id, "", day, "afternoon")
 
+            self.assign_shifts(self.unassigned_shifts[day])
+
     def case3(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
             week = "week " + str(rotation)
@@ -117,6 +121,8 @@ class Generator:
                 for employee_info in self.employees_infos:
                     if employee_info.attendance[week][day]["afternoon"]:
                         self.add_free_employee(employee_info.employee_id, week, day, "afternoon")
+
+                self.assign_shifts(self.unassigned_shifts[week][day])
 
     def case4(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
@@ -149,6 +155,8 @@ class Generator:
                     if employee_info.attendance[week][day]["afternoon"]:
                         self.add_free_employee(employee_info.employee_id, week, day, "afternoon")
 
+                self.assign_shifts(self.unassigned_shifts[week][day])
+
     def add_unassigned_shift(self, kid_id, week, day, time):
         kid = Kid.query.get(kid_id)
 
@@ -180,6 +188,26 @@ class Generator:
         elif self.calendar.rotation_interval == 'weekly rotations':
             self.free_employees[week][day][time].append(employee)
             self.serialized_free_employees[week][day][time].append(employee_schema.dump(employee))
+
+    def assign_shifts(self, unassigned_shifts):
+        if "morning" in unassigned_shifts:
+            for shift in unassigned_shifts["morning"][1]:
+                # challenging / closed circle / 2 employees
+                return ""
+            for shift in unassigned_shifts["morning"][2]:
+                # challenging / closed circle / 1 employees
+                return ""
+            for shift in unassigned_shifts["morning"][3]:
+                # challenging / 2 employees
+                return ""
+            for shift in unassigned_shifts["morning"][4]:
+                # average or easy-going / 2 employees
+                return ""
+            for shift in unassigned_shifts["morning"][5]:
+                # average or easy-going / 1 employees
+                return ""
+
+
 
 
 # ///////////////// RUN GENERATOR /////////////////
