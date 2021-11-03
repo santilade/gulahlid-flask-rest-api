@@ -59,11 +59,8 @@ class Generator:
         for employee_info in filtered_employees_infos:
             self.employees_infos.append(employee_info)
             n = [0] * len(kid_id_list)
-            self.used_combinations[employee_info.id] = dict(zip(kid_id_list, n))
+            self.used_combinations[employee_info.employee_id] = dict(zip(kid_id_list, n))
 
-        # all_combinations = list(itertools.product(employee_id_list, kid_id_list))
-        # n = [0] * len(all_combinations)
-        # self.used_combinations = dict(zip(all_combinations, n))
         print(self.used_combinations)
 
     def case1(self):
@@ -133,7 +130,7 @@ class Generator:
                     if employee_info.attendance[week][day]["afternoon"]:
                         self.add_free_employee(employee_info.employee_id, week, day, "afternoon")
 
-                self.assign_shifts(self.unassigned_shifts[day])
+                self.assign_shifts(self.unassigned_shifts[week][day])
 
     def case4(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
@@ -166,7 +163,7 @@ class Generator:
                     if employee_info.attendance[week][day]["afternoon"]:
                         self.add_free_employee(employee_info.employee_id, week, day, "afternoon")
 
-                self.assign_shifts(self.unassigned_shifts[day])
+                self.assign_shifts(self.unassigned_shifts[week][day])
 
     def add_unassigned_shift(self, kid_id, week, day, time):
         kid = Kid.query.get(kid_id)
@@ -216,7 +213,7 @@ class Generator:
                 return ""
             for shift in unassigned_shifts["morning"][5]:
                 # average or easy-going / 1 employees
-                list(itertools.product(unassigned_shifts["morning"][1], []))
+                # list(itertools.product(unassigned_shifts["morning"][1], []))
                 return ""
 
 
