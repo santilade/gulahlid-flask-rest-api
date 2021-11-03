@@ -48,20 +48,22 @@ class Generator:
 
     def get_infos(self):
         filtered_employees_infos = EmployeeInfo.query.filter_by(calendar_id=self.calendar.id)
-        employee_id_list = []
-        kid_id_list = []
-        for employee_info in filtered_employees_infos:
-            self.employees_infos.append(employee_info)
-            employee_id_list.append(employee_info.employee_id)
-
         filtered_kids_infos = KidInfo.query.filter_by(calendar_id=self.calendar.id)
+
+        kid_id_list = []
+
         for kid_info in filtered_kids_infos:
             self.kids_infos.append(kid_info)
             kid_id_list.append(kid_info.kid_id)
 
-        all_combinations = list(itertools.product(employee_id_list, kid_id_list))
-        n = [0] * len(all_combinations)
-        self.used_combinations = zip(all_combinations, n)
+        for employee_info in filtered_employees_infos:
+            self.employees_infos.append(employee_info)
+            n = [0] * len(kid_id_list)
+            self.used_combinations[employee_info.id] = dict(zip(kid_id_list, n))
+
+        # all_combinations = list(itertools.product(employee_id_list, kid_id_list))
+        # n = [0] * len(all_combinations)
+        # self.used_combinations = dict(zip(all_combinations, n))
         print(self.used_combinations)
 
     def case1(self):
