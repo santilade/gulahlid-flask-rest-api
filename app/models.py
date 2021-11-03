@@ -153,9 +153,11 @@ class KidInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
     attendance = db.Column(db.JSON)
+    employee_circle = db.Column(db.JSON)
     calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
 
-    def __init__(self, kid_id, attendance, calendar_id):
+    def __init__(self, kid_id, attendance, employee_circle, calendar_id):
         self.kid_id = kid_id
         self.attendance = attendance
+        self.employee_circle = employee_circle
         self.calendar_id = calendar_id

@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+import itertools
 from app import db
 from .models import Calendar, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
 from .schemas import calendar_schema, calendars_schema, shift_schema, shifts_schema, group_schema, groups_schema, \
@@ -21,6 +22,7 @@ class Generator:
         self.serialized_unassigned_shifts = {}
         self.free_employees = {}  # {"week 1": {"Monday": [Employee, Employee, ...],"Tuesday": [], ...}, "week 2": ...}
         self.serialized_free_employees = {}
+        self.used_combinations = {}
         self.switcher = {
             "daily rotations": {
                 "part-time": self.case1,
@@ -46,12 +48,21 @@ class Generator:
 
     def get_infos(self):
         filtered_employees_infos = EmployeeInfo.query.filter_by(calendar_id=self.calendar.id)
+        employee_id_list = []
+        kid_id_list = []
         for employee_info in filtered_employees_infos:
             self.employees_infos.append(employee_info)
+            employee_id_list.append(employee_info.employee_id)
 
         filtered_kids_infos = KidInfo.query.filter_by(calendar_id=self.calendar.id)
         for kid_info in filtered_kids_infos:
             self.kids_infos.append(kid_info)
+            kid_id_list.append(kid_info.kid_id)
+
+        all_combinations = list(itertools.product(employee_id_list, kid_id_list))
+        n = [0] * len(all_combinations)
+        self.used_combinations = zip(all_combinations, n)
+        print(self.used_combinations)
 
     def case1(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
@@ -120,7 +131,7 @@ class Generator:
                     if employee_info.attendance[week][day]["afternoon"]:
                         self.add_free_employee(employee_info.employee_id, week, day, "afternoon")
 
-                self.assign_shifts(self.unassigned_shifts[week][day])
+                self.assign_shifts(self.unassigned_shifts[day])
 
     def case4(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
@@ -153,7 +164,7 @@ class Generator:
                     if employee_info.attendance[week][day]["afternoon"]:
                         self.add_free_employee(employee_info.employee_id, week, day, "afternoon")
 
-                self.assign_shifts(self.unassigned_shifts[week][day])
+                self.assign_shifts(self.unassigned_shifts[day])
 
     def add_unassigned_shift(self, kid_id, week, day, time):
         kid = Kid.query.get(kid_id)
@@ -203,6 +214,7 @@ class Generator:
                 return ""
             for shift in unassigned_shifts["morning"][5]:
                 # average or easy-going / 1 employees
+                list(itertools.product(unassigned_shifts["morning"][1], []))
                 return ""
 
 

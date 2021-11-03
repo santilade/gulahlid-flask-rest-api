@@ -12,9 +12,10 @@ kid_info_controller = Blueprint('kid_info_controller', __name__)
 def add_kid_info():
     kid_id = request.json['kid_id']
     attendance = request.json['attendance']
+    employee_circle = request.json['employee_circle']
     calendar_id = request.json['calendar_id']
 
-    new_kid_info = KidInfo(kid_id, attendance, calendar_id)
+    new_kid_info = KidInfo(kid_id, attendance, employee_circle, calendar_id)
 
     db.session.add(new_kid_info)
     db.session.commit()
@@ -45,9 +46,12 @@ def update_kid_info(id):
     kid_info = KidInfo.query.get(id)
 
     attendance = request.json['attendance']
+    employee_circle = request.json['employee_circle']
 
     if attendance:
         kid_info.attendance = attendance
+    if employee_circle:
+        kid_info.employee_circle = employee_circle
 
     db.session.commit()
 
