@@ -118,8 +118,8 @@ class Kid(db.Model):
     grade = db.Column(db.Integer, nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
     difficulty = db.Column(db.String(100), nullable=False)  # challenging / average / easy-going
-    closed_circle = db.Column(db.Boolean, nullable=False)
     employees_needed = db.Column(db.Integer, nullable=False)
+    closed_circle = db.Column(db.Boolean, nullable=False)
 
     compatible_employees = db.relationship("Employee",
                                            secondary=employee_kid_compatible,
@@ -153,11 +153,11 @@ class KidInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kid_id = db.Column(db.Integer, db.ForeignKey('kid.id'))
     attendance = db.Column(db.JSON)
-    employee_circle = db.Column(db.JSON)
+    closed_circle_list = db.Column(db.JSON)
     calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'))
 
-    def __init__(self, kid_id, attendance, employee_circle, calendar_id):
+    def __init__(self, kid_id, attendance, closed_circle_list, calendar_id):
         self.kid_id = kid_id
         self.attendance = attendance
-        self.employee_circle = employee_circle
+        self.closed_circle_list = closed_circle_list
         self.calendar_id = calendar_id

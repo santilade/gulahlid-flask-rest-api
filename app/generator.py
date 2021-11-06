@@ -19,10 +19,10 @@ class Generator:
         self.employees_infos = []  # [EmployeeInfo, EmployeeInfo, EmployeeInfo, ...]
         self.kids_infos = []  # [KidInfo, KidInfo, KidInfo, ...]
         self.unassigned_shifts = {}  # {day 1: [Shift, Shift, Shift, ...]}
+        self.assigned_shifts = {}  # {day 1: [Shift, Shift, Shift, ...]}
         self.serialized_unassigned_shifts = {}
         self.free_employees = {}  # {"week 1": {"Monday": [Employee, Employee, ...],"Tuesday": [], ...}, "week 2": ...}
         self.serialized_free_employees = {}
-        self.used_combinations = {}
         self.switcher = {
             "daily rotations": {
                 "part-time": self.case1,
@@ -50,18 +50,11 @@ class Generator:
         filtered_employees_infos = EmployeeInfo.query.filter_by(calendar_id=self.calendar.id)
         filtered_kids_infos = KidInfo.query.filter_by(calendar_id=self.calendar.id)
 
-        kid_id_list = []
-
         for kid_info in filtered_kids_infos:
             self.kids_infos.append(kid_info)
-            kid_id_list.append(kid_info.kid_id)
 
         for employee_info in filtered_employees_infos:
             self.employees_infos.append(employee_info)
-            n = [0] * len(kid_id_list)
-            self.used_combinations[employee_info.employee_id] = dict(zip(kid_id_list, n))
-
-        print(self.used_combinations)
 
     def case1(self):
         for rotation in range(1, self.calendar.total_rotations + 1):
@@ -198,20 +191,23 @@ class Generator:
             self.serialized_free_employees[week][day][time].append(employee_schema.dump(employee))
 
     def assign_shifts(self, unassigned_shifts):
-        if "morning" in unassigned_shifts:
-            for shift in unassigned_shifts["morning"][1]:
+        if "afternoon" in unassigned_shifts:
+            for shift in unassigned_shifts["afternoon"][1]:
                 # challenging / closed circle / 2 employees
-                return ""
-            for shift in unassigned_shifts["morning"][2]:
+                kid = Kid.query.get(shift.kid_id)
+                possible_employees = kid.compatible_employees
+                print(possible_employees)
+
+            for shift in unassigned_shifts["afternoon"][2]:
                 # challenging / closed circle / 1 employees
                 return ""
-            for shift in unassigned_shifts["morning"][3]:
+            for shift in unassigned_shifts["afternoon"][3]:
                 # challenging / 2 employees
                 return ""
-            for shift in unassigned_shifts["morning"][4]:
+            for shift in unassigned_shifts["afternoon"][4]:
                 # average or easy-going / 2 employees
                 return ""
-            for shift in unassigned_shifts["morning"][5]:
+            for shift in unassigned_shifts["afternoon"][5]:
                 # average or easy-going / 1 employees
                 # list(itertools.product(unassigned_shifts["morning"][1], []))
                 return ""

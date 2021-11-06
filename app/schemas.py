@@ -100,7 +100,7 @@ class KidInfoSchema(SQLAlchemySchema):
     id = auto_field()
     kid_id = auto_field()
     attendance = auto_field()
-    employee_circle = auto_field()
+    closed_circle_list = auto_field()
     calendar_id = auto_field()
 
 
