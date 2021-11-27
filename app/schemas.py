@@ -1,11 +1,11 @@
 from marshmallow_sqlalchemy import SQLAlchemySchema, auto_field
-from .models import Agenda, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
+from .models import Calendar, Shift, Group, Employee, EmployeeInfo, Kid, KidInfo
 
 
-# Agenda Schema
-class AgendaSchema(SQLAlchemySchema):
+# Calendar Schema
+class CalendarSchema(SQLAlchemySchema):
     class Meta:
-        model = Agenda
+        model = Calendar
         load_instance = True
 
     id = auto_field()
@@ -25,10 +25,11 @@ class ShiftSchema(SQLAlchemySchema):
         load_instance = True
 
     id = auto_field()
-    agenda_id = auto_field()
-    rotation = auto_field()
-    weekday = auto_field()
-    shift = auto_field()
+    calendar_id = auto_field()
+    week = auto_field()
+    day = auto_field()
+    time = auto_field()
+    priority = auto_field()
     employee_id = auto_field()
     kid_id = auto_field()
 
@@ -54,7 +55,6 @@ class EmployeeSchema(SQLAlchemySchema):
     id = auto_field()
     name = auto_field()
     compatible_kids = auto_field()
-    incompatible_kids = auto_field()
     compatible_employees = auto_field()
     employee_infos = auto_field()
     shifts = auto_field()
@@ -69,7 +69,7 @@ class EmployeeInfoSchema(SQLAlchemySchema):
     id = auto_field()
     employee_id = auto_field()
     attendance = auto_field()
-    agenda_id = auto_field()
+    calendar_id = auto_field()
 
 
 # Kid Schema
@@ -82,8 +82,11 @@ class KidSchema(SQLAlchemySchema):
     name = auto_field()
     grade = auto_field()
     group_id = auto_field()
+    difficulty = auto_field()
+    closed_circle = auto_field()
+    employees_needed = auto_field()
     compatible_employees = auto_field()
-    incompatible_employees = auto_field()
+    compatible_kids = auto_field()
     kid_infos = auto_field()
     shifts = auto_field()
 
@@ -96,15 +99,14 @@ class KidInfoSchema(SQLAlchemySchema):
 
     id = auto_field()
     kid_id = auto_field()
-    difficulty = auto_field()
-    employees_needed = auto_field()
     attendance = auto_field()
-    agenda_id = auto_field()
+    closed_circle_list = auto_field()
+    calendar_id = auto_field()
 
 
 # Init schemas
-agenda_schema = AgendaSchema()
-agendas_schema = AgendaSchema(many=True)
+calendar_schema = CalendarSchema()
+calendars_schema = CalendarSchema(many=True)
 
 shift_schema = ShiftSchema()
 shifts_schema = ShiftSchema(many=True)

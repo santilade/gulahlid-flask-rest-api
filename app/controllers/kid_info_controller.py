@@ -11,12 +11,11 @@ kid_info_controller = Blueprint('kid_info_controller', __name__)
 @kid_info_controller.route('/kid_info', methods=['POST'])
 def add_kid_info():
     kid_id = request.json['kid_id']
-    difficulty = request.json['difficulty']
-    employees_needed = request.json['employees_needed']
     attendance = request.json['attendance']
-    agenda_id = request.json['agenda_id']
+    closed_circle_list = request.json['closed_circle_list']
+    calendar_id = request.json['calendar_id']
 
-    new_kid_info = KidInfo(kid_id, difficulty, employees_needed, attendance, agenda_id)
+    new_kid_info = KidInfo(kid_id, attendance, closed_circle_list, calendar_id)
 
     db.session.add(new_kid_info)
     db.session.commit()
@@ -46,16 +45,13 @@ def get_kid_info(id):
 def update_kid_info(id):
     kid_info = KidInfo.query.get(id)
 
-    difficulty = request.json['difficulty']
-    employees_needed = request.json['employees_needed']
     attendance = request.json['attendance']
+    closed_circle_list = request.json['closed_circle_list']
 
-    if difficulty:
-        kid_info.difficulty = difficulty
-    if employees_needed:
-        kid_info.employees_needed = employees_needed
     if attendance:
         kid_info.attendance = attendance
+    if closed_circle_list:
+        kid_info.closed_circle_list = closed_circle_list
 
     db.session.commit()
 

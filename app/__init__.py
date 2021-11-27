@@ -26,7 +26,7 @@ def create_app():
     db.init_app(app)
 
     # Import blueprints:
-    from app.controllers.agenda_controller import agenda_controller
+    from app.controllers.calendar_controller import calendar_controller
     from app.controllers.employee_controller import employee_controller
     from app.controllers.employee_info_controller import employee_info_controller
     from app.controllers.group_controller import group_controller
@@ -36,7 +36,7 @@ def create_app():
     from .generator import generator
 
     # Register blueprints:
-    app.register_blueprint(agenda_controller, url_prefix='/')
+    app.register_blueprint(calendar_controller, url_prefix='/')
     app.register_blueprint(employee_controller, url_prefix='/')
     app.register_blueprint(employee_info_controller, url_prefix='/')
     app.register_blueprint(group_controller, url_prefix='/')

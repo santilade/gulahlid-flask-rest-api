@@ -12,30 +12,22 @@ employee_controller = Blueprint('employee_controller', __name__)
 def add_employee():
     name = request.json['name']
     compatible_kids = []
-    incompatible_kids = []
     compatible_employees = []
     employee_infos = []
     shifts = []
 
-    new_employee = Employee(name, compatible_kids, incompatible_kids, compatible_employees, employee_infos, shifts)
+    new_employee = Employee(name, compatible_kids, compatible_employees, employee_infos, shifts)
 
     db.session.add(new_employee)
     db.session.flush()
 
     compatible_kids = request.json['compatible_kids']
-    incompatible_kids = request.json['incompatible_kids']
     compatible_employees = request.json['compatible_employees']
 
     if compatible_kids:
         for kid_id in compatible_kids:
             kid = Kid.query.get(kid_id)
-            new_employee.compatible_employees.append(kid)
-            db.session.flush()
-
-    if incompatible_kids:
-        for kid_id in incompatible_kids:
-            kid = Kid.query.get(kid_id)
-            new_employee.incompatible_employees.append(kid)
+            new_employee.compatible_kids.append(kid)
             db.session.flush()
 
     if compatible_employees:
@@ -74,7 +66,6 @@ def update_employee(id):
 
     name = request.json['name']
     compatible_kids = request.json['compatible_kids']
-    incompatible_kids = request.json['incompatible_kids']
     compatible_employees = request.json['compatible_employees']
 
     if name != "":
@@ -90,17 +81,6 @@ def update_employee(id):
             db.session.flush()
     elif compatible_kids is None:
         employee.compatible_kids = []
-        db.session.flush()
-
-    if incompatible_kids:
-        employee.incompatible_kids = []
-        db.session.flush()
-        for kid_id in incompatible_kids:
-            kid = Kid.query.get(kid_id)
-            employee.incompatible_kids.append(kid)
-            db.session.flush()
-    elif incompatible_kids is None:
-        employee.incompatible_kids = []
         db.session.flush()
 
     if compatible_employees:
@@ -132,7 +112,6 @@ def delete_employee(id):
     employee = Employee.query.get(id)
 
     compatible_kids = employee.compatible_kids
-    incompatible_kids = employee.incompatible_kids
     compatible_employees = employee.compatible_employees
     employee_infos = employee.employee_infos
     shifts = employee.shifts
@@ -140,10 +119,6 @@ def delete_employee(id):
 
     for compatible_kid in compatible_kids:
         compatible_kid.compatible_employees.remove(employee)
-        db.session.flush()
-
-    for incompatible_kid in incompatible_kids:
-        incompatible_kid.incompatible_employees.remove(employee)
         db.session.flush()
 
     for compatible_employee in compatible_employees:

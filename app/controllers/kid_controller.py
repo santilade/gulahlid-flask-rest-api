@@ -13,18 +13,22 @@ def add_kid():
     name = request.json['name']
     grade = request.json['grade']
     group_id = request.json['group_id']
+    difficulty = request.json['difficulty']
+    closed_circle = request.json['closed_circle']
+    employees_needed = request.json['employees_needed']
     compatible_employees = []
-    incompatible_employees = []
+    compatible_kids = []
     kid_infos = []
     shifts = []
 
-    new_kid = Kid(name, grade, group_id, compatible_employees, incompatible_employees, kid_infos, shifts)
+    new_kid = Kid(name, grade, group_id, difficulty, closed_circle, employees_needed, compatible_employees,
+                  compatible_kids, kid_infos, shifts)
 
     db.session.add(new_kid)
     db.session.flush()
 
     compatible_employees = request.json['compatible_employees']
-    incompatible_employees = request.json['incompatible_employees']
+    compatible_kids = request.json['compatible_kids']
 
     if compatible_employees:
         for compatible_employee in compatible_employees:
@@ -32,10 +36,11 @@ def add_kid():
             new_kid.compatible_employees.append(employee)
             db.session.flush()
 
-    if incompatible_employees:
-        for incompatible_employee in incompatible_employees:
-            employee = Employee.query.get(incompatible_employee)
-            new_kid.incompatible_employees.append(employee)
+    if compatible_kids:
+        for kid_id in compatible_kids:
+            compatible_kid = Kid.query.get(kid_id)
+            new_kid.compatible_kids.append(compatible_kid)
+            compatible_kid.compatible_kids.append(new_kid)
             db.session.flush()
 
     db.session.commit()
@@ -66,8 +71,11 @@ def update_kid(id):
     name = request.json['name']
     grade = request.json['grade']
     group_id = request.json['group_id']
+    difficulty = request.json['difficulty']
+    closed_circle = request.json['closed_circle']
+    employees_needed = request.json['employees_needed']
     compatible_employees = request.json['compatible_employees']
-    incompatible_employees = request.json['incompatible_employees']
+    compatible_kids = request.json['compatible_kids']
 
     if name != "":
         kid.name = name
@@ -78,6 +86,15 @@ def update_kid(id):
     if group_id != "":
         kid.group_id = group_id
         db.session.flush()
+    if difficulty != "":
+        kid.difficulty = difficulty
+        db.session.flush()
+    if closed_circle != "":
+        kid.closed_circle = closed_circle
+        db.session.flush()
+    if employees_needed != "":
+        kid.employees_needed = employees_needed
+        db.session.flush()
 
     if compatible_employees:
         for compatible_employee in compatible_employees:
@@ -85,16 +102,25 @@ def update_kid(id):
             kid.compatible_employees.append(employee)
             db.session.flush()
     elif compatible_employees is None:
-        kid.compatible_kids = []
+        kid.compatible_employees = []
         db.session.flush()
 
-    if incompatible_employees:
-        for incompatible_employee in incompatible_employees:
-            employee = Employee.query.get(incompatible_employee)
-            kid.incompatible_employees.append(employee)
+    if compatible_kids:
+        for old_compatible_kid in kid.compatible_kids:
+            old_compatible_kid.compatible_kids.remove(kid)
             db.session.flush()
-    elif incompatible_employees is None:
-        kid.incompatible_kids = []
+        kid.compatible_kids = []
+        db.session.flush()
+        for kid_id in compatible_kids:
+            compatible_kid = Kid.query.get(kid_id)
+            kid.compatible_kids.append(compatible_kid)
+            compatible_kid.compatible_kids.append(kid)
+            db.session.flush()
+    elif compatible_kids is None:
+        for old_compatible_employee in kid.compatible_kids:
+            old_compatible_employee.compatible_kids.remove(kid)
+            db.session.flush()
+        kid.compatible_kids = []
         db.session.flush()
 
     db.session.commit()
@@ -108,7 +134,7 @@ def delete_kid(id):
     kid = Kid.query.get(id)
 
     compatible_employees = kid.compatible_employees
-    incompatible_employees = kid.incompatible_employees
+    compatible_kids = kid.compatible_kids
     kid_infos = kid.kid_infos
     shifts = kid.shifts
 
@@ -116,8 +142,8 @@ def delete_kid(id):
         compatible_employee.compatible_kids.remove(kid)
         db.session.flush()
 
-    for incompatible_employee in incompatible_employees:
-        incompatible_employee.incompatible_kids.remove(kid)
+    for compatible_kid in compatible_kids:
+        compatible_kid.compatible_kids.remove(kid)
         db.session.flush()
 
     for kid_info in kid_infos:
